@@ -57,9 +57,10 @@
                             <h2 class="card-title fw-bold mb-1">Login</h2>
                             <form class="auth-login-form mt-2" method="POST" action="{{ route('login') }}">
                                 @csrf
+                                <x-auth-validation-errors class="mb-4" :errors="$errors" />
                                 <div class="mb-1">
                                     <label class="form-label" for="login-email">メールアドレス</label>
-                                    <input class="form-control" id="login-email" type="text" name="login-email"
+                                    <input class="form-control" id="login-email" type="text" name="email"
                                            placeholder="メールアドレスを入力してください" aria-describedby="login-email" autofocus="" tabindex="1"/>
                                 </div>
                                 <div class="mb-1">
@@ -69,7 +70,7 @@
                                     </div>
                                     <div class="input-group input-group-merge form-password-toggle">
                                         <input class="form-control form-control-merge" id="login-password"
-                                               type="password" name="login-password" placeholder="············"
+                                               type="password" name="password" placeholder="············"
                                                aria-describedby="login-password" tabindex="2"/><span
                                             class="input-group-text cursor-pointer"><i data-feather="eye"></i></span>
                                     </div>
