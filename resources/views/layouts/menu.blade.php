@@ -1,5 +1,9 @@
 <!-- BEGIN: Main Menu-->
-<div class="main-menu menu-fixed menu-dark menu-accordion menu-shadow" data-scroll-to-active="true">
+<?php
+use App\Models\Shop;
+$stores = Shop::all();
+?>
+<div class="main-menu menu-fixed menu-light menu-accordion menu-shadow" data-scroll-to-active="true">
     <div class="navbar-header">
         <ul class="nav navbar-nav flex-row">
             <li class="nav-item me-auto"><a class="navbar-brand"
@@ -47,10 +51,23 @@
     <div class="main-menu-content">
 
         <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
-            <li class=" nav-item">
-                <a class="d-flex align-items-center" href="app-email.html">
-                    <i data-feather="shopping-cart"></i><span class="menu-title text-truncate" data-i18n="Email">Email</span>
+            <li class="{{ str_contains(\Request::route()->getName(), 'dashboard') ? 'active' : '' }} nav-item">
+                <a class="d-flex align-items-center" href="{{route('dashboard')}}">
+                    <i data-feather="shopping-cart"></i><span class="menu-title text-truncate" data-i18n="Email">店舗</span>
                 </a>
+            </li>
+            <li class="nav-item {{ str_contains(\Request::route()->getName(), 'store-product') ? 'sidebar-group-active open' : '' }}">
+                <a class="d-flex align-items-center" href="#"><i data-feather="file-text"></i><span
+                        class="menu-title text-truncate" data-i18n="Invoice">商品管理</span></a>
+                <ul class="menu-content">
+                    @foreach($stores as $item)
+                        <li class="menu_item" data-id="{{$item->id}}">
+                            <a class="d-flex align-items-center" href="{{route('store-product', $item->id)}}">
+                                <i data-feather="circle"></i><span class="menu-item text-truncate" data-i18n="List">{{$item->store_name}}</span>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
             </li>
         </ul>
     </div>

@@ -38,23 +38,6 @@
         <!-- BEGIN: Custom CSS-->
         <link rel="stylesheet" type="text/css" href="{{asset('css/style.css')}}">
         <!-- END: Custom CSS-->
-
-        <!-- Scripts -->
-        <script src="{{ asset('js/app-origin.js') }}" defer></script>
-    </head>
-    <body class="vertical-layout vertical-menu-modern  navbar-floating footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="">
-        @include('layouts.navigation')
-        @include('layouts.menu')
-
-        <!-- BEGIN: Content-->
-        <div class="app-content content ">
-            <div class="content-overlay"></div>
-            <div class="header-navbar-shadow"></div>
-            <div class="content-wrapper container-xxl p-0">
-                {{ $slot }}
-            </div>
-        </div>
-        <!-- END: Content-->
         <!-- BEGIN: Vendor JS-->
         <script src="{{asset('js/vendors.min.js')}}"></script>
         <!-- BEGIN Vendor JS-->
@@ -82,11 +65,6 @@
         <script src="{{asset('js/core/app.min.js')}}"></script>
         <script src="{{asset('js/customizer.min.js')}}"></script>
         <!-- END: Theme JS-->
-
-        <!-- BEGIN: Page JS-->
-        <script src="{{asset('js/app-user-list.min.js')}}"></script>
-        <!-- END: Page JS-->
-
         <script>
             $(window).on('load', function () {
                 if (feather) {
@@ -94,5 +72,20 @@
                 }
             })
         </script>
+    </head>
+    <body class="vertical-layout vertical-menu-modern  navbar-floating footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="">
+        @include('layouts.navigation')
+        @include('layouts.menu')
+
+        <!-- BEGIN: Content-->
+        <div class="app-content content ">
+            <div class="content-overlay"></div>
+            <div class="header-navbar-shadow"></div>
+            <div class="content-wrapper container-xxl p-0">
+                {{ $slot }}
+            </div>
+        </div>
+        <!-- END: Content-->
+
     </body>
 </html>
