@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateYahooTokensTable extends Migration
+class CreateShopProductsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,12 +13,11 @@ class CreateYahooTokensTable extends Migration
      */
     public function up()
     {
-        Schema::create('yahoo_tokens', function (Blueprint $table) {
+        Schema::create('shop_products', function (Blueprint $table) {
             $table->id();
-            $table->longText('access_token')->nullable();
-            $table->longText('refresh_token')->nullable();
-            $table->string('state')->nullable();
-            $table->string('nonce')->nullable();
+            $table->integer('shop_id');
+            $table->integer('item_code');
+            $table->integer('product_id');
             $table->timestamps();
         });
     }
@@ -30,6 +29,6 @@ class CreateYahooTokensTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('yahoo_tokens');
+        Schema::dropIfExists('shop_products');
     }
 }

@@ -5,15 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class YahooCategory extends Model
+class ShopProduct extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'store_id',
-        'category_code',
-        'category_name',
-        'display',
-        'is_leaf',
-        'update_date'
+        'shop_id',
+        'item_code',
+        'product_id'
     ];
 }

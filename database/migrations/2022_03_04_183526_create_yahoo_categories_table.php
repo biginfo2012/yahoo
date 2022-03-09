@@ -16,12 +16,11 @@ class CreateYahooCategoriesTable extends Migration
         Schema::create('yahoo_categories', function (Blueprint $table) {
             $table->id();
             $table->integer('store_id');
-            $table->string('page_key')->nullable();
-            $table->longText('name')->nullable();
+            $table->string('category_code')->nullable();
+            $table->longText('category_name')->nullable();
             $table->tinyInteger('display')->nullable();
-            $table->tinyInteger('hidden_page_flag')->nullable();
-            $table->tinyInteger('editing_flag')->nullable();
-            $table->dateTime('update_time')->nullable();
+            $table->tinyInteger('is_leaf')->nullable();
+            $table->dateTime('update_date')->nullable();
             $table->timestamps();
         });
     }

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('login');
 });
 Route::group(['middleware' => 'auth'], function (){
     Route::get('dashboard', [ShopController::class, 'storeManage'])->name('dashboard');
@@ -26,6 +26,7 @@ Route::group(['middleware' => 'auth'], function (){
     Route::get('yahoo_callback', [ProductController::class, 'yahooCallback'])->name('yahoo_callback');
     Route::get('yahoo-get-category/{id}', [ProductController::class, 'yahooGetCategory'])->name('yahoo-get-category');
     Route::get('yahoo-search-product/{id}', [ProductController::class, 'yahooSearchProduct'])->name('yahoo-search-product');
+    Route::get('yahoo-get-product-detail', [ProductController::class, 'yahooGetProductDetail'])->name('yahoo-get-product-detail');
 });
 //Route::get('/dashboard', function () {
 //    return view('dashboard');

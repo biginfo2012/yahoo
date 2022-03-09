@@ -30,4 +30,14 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'yahoo' => [
+        'app_id' => env('YAHOO_CLIENT_ID'),
+        'app_secret' => env('YAHOO_CLIENT_SECRET'),
+    ],
+
+    'yahoo_test' => [
+        'app_id' => env('YAHOO_CLIENT_ID'),
+        'app_secret' => env('YAHOO_CLIENT_SECRET'),
+    ],
+
 ];
