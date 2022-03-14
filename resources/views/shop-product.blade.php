@@ -16,7 +16,7 @@
                                     <input id="state" type="hidden" value="{{$state}}">
                                     <input id="nonce" type="hidden" value="{{$nonce}}">
                                     <span class="yconnectLogin position-absolute" style="left: -155px;"></span>
-                                    <a href="{{route('yahoo-auth-code')}}" class="dt-button add-new btn btn-primary"><span>AuthCode取得</span></a>
+{{--                                    <a href="{{route('yahoo-auth-code')}}" class="dt-button add-new btn btn-primary"><span>AuthCode取得</span></a>--}}
                                     <a href="{{route('yahoo-get-category', $store_id)}}" class="dt-button add-new btn btn-primary"><span>カテゴリ取得</span></a>
                                     <a href="{{route('yahoo-search-product', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品取得</span></a>
                                 </div>

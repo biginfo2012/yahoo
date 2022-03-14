@@ -14,6 +14,7 @@ class YahooCategory extends Model
         'category_name',
         'display',
         'is_leaf',
+        'status',
         'update_date'
     ];
 }

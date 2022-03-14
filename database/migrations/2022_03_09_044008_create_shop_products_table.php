@@ -16,7 +16,7 @@ class CreateShopProductsTable extends Migration
         Schema::create('shop_products', function (Blueprint $table) {
             $table->id();
             $table->integer('shop_id');
-            $table->integer('item_code');
+            $table->string('item_code');
             $table->integer('product_id');
             $table->timestamps();
         });
