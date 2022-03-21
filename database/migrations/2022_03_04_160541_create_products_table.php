@@ -35,7 +35,7 @@ class CreateProductsTable extends Migration
             $table->mediumText('cart_related_items')->nullable();
             $table->integer('ship_weight')->nullable();
             $table->integer('taxable')->nullable();
-            $table->integer('taxrate_type')->nullable();
+            $table->float('taxrate_type')->nullable();
             $table->date('release_date')->nullable();
             $table->dateTime('sale_period_start')->nullable();
             $table->dateTime('sale_period_end')->nullable();

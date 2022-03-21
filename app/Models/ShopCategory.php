@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ShopProduct extends Model
+class ShopCategory extends Model
 {
     use HasFactory;
     protected $fillable = [
         'shop_id',
-        'item_code',
-        'product_id',
-        'status'
+        'pagekey',
+        'name',
+        'display',
+        'updatetime',
+        'status',
+        'get_status',
+        'total',
+        'start'
     ];
-    public function product(){
-        return $this->hasOne(Product::class, 'id', 'product_id');
-    }
 }

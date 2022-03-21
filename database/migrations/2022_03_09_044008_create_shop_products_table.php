@@ -18,6 +18,7 @@ class CreateShopProductsTable extends Migration
             $table->integer('shop_id');
             $table->string('item_code');
             $table->integer('product_id');
+            $table->tinyInteger('status')->nullable();
             $table->timestamps();
         });
     }

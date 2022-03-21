@@ -16,16 +16,19 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('login');
+    return view('auth.login');
 });
 Route::group(['middleware' => 'auth'], function (){
     Route::get('dashboard', [ShopController::class, 'storeManage'])->name('dashboard');
     Route::post('store-add', [ShopController::class, 'storeAdd'])->name('store-add');
     Route::get('store-product/{id}', [ProductController::class, 'storeProduct'])->name('store-product');
+    Route::post('product-list', [ProductController::class, 'productList'])->name('product-list');
     Route::get('yahoo-auth-code', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');
     Route::get('yahoo_callback', [ProductController::class, 'yahooCallback'])->name('yahoo_callback');
+    Route::get('yahoo-refresh', [ProductController::class, 'yahooRefresh'])->name('yahoo-refresh');
     Route::get('yahoo-get-category/{id}', [ProductController::class, 'yahooGetCategory'])->name('yahoo-get-category');
     Route::get('yahoo-search-product/{id}', [ProductController::class, 'yahooSearchProduct'])->name('yahoo-search-product');
+    Route::get('yahoo-product-item/{id}', [ProductController::class, 'yahooProductItem'])->name('yahoo-product-item');
     Route::get('yahoo-get-product-detail', [ProductController::class, 'yahooGetProductDetail'])->name('yahoo-get-product-detail');
 });
 //Route::get('/dashboard', function () {
