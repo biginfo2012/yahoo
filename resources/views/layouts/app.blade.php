@@ -66,6 +66,7 @@
         <script src="{{asset('js/customizer.min.js')}}"></script>
         <!-- END: Theme JS-->
         <script>
+            let token = '{{csrf_token()}}';
             $(window).on('load', function () {
                 if (feather) {
                     feather.replace({width: 14, height: 14});

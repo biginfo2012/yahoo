@@ -28,6 +28,7 @@
                             <th>ストア名</th>
                             <th>ストアアカウント</th>
                             <th>登録日</th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -36,6 +37,16 @@
                                 <td>{{$item->store_name}}</td>
                                 <td>{{$item->store_account}}</td>
                                 <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
+                                <td>
+                                    <a class="item-delete" data-id="{{$item->id}}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2 font-small-4 me-50">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </a>
+                                </td>
                             </tr>
                         @endforeach
 
@@ -85,23 +96,70 @@
     </div>
     <script>
         let store_add = '{{route('store-add')}}';
-        $('#saveBtn').click(function (e) {
-            e.preventDefault();
-            if($('#store_add').valid()){
-                var paramObj = new FormData($('#store_add')[0]);
-                $.ajax({
-                    url: store_add,
-                    type: 'post',
-                    data: paramObj,
-                    contentType: false,
-                    processData: false,
-                    success: function(response){
-                        $('#modals-slide-in').modal('hide');
-                        window.location.reload();
-                    },
+        let store_delete = '{{route('store-delete')}}';
+        $(document).ready(function () {
+            $('#saveBtn').click(function (e) {
+                e.preventDefault();
+                if($('#store_add').valid()){
+                    var paramObj = new FormData($('#store_add')[0]);
+                    $.ajax({
+                        url: store_add,
+                        type: 'post',
+                        data: paramObj,
+                        contentType: false,
+                        processData: false,
+                        success: function(response){
+                            $('#modals-slide-in').modal('hide');
+                            window.location.reload();
+                        },
+                    });
+                }
+            })
+            $('.item-delete').click(function (e) {
+                let id = $(this).data('id');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
                 });
-            }
-        })
+                $.ajax({
+                    url: store_delete,
+                    type:'post',
+                    data: {
+                        store_id : id
+                    },
+                    success: function (response) {
+                        toastr.options = {
+                            "closeButton": true,
+                            "debug": false,
+                            "newestOnTop": false,
+                            "progressBar": false,
+                            "positionClass": "toast-top-right",
+                            "preventDuplicates": false,
+                            "onclick": null,
+                            "showDuration": "300",
+                            "hideDuration": "1000",
+                            "timeOut": "5000",
+                            "extendedTimeOut": "1000",
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        };
+                        if(response.status == true){
+                            toastr.success("成功しました。");
+                            window.location.reload()
+                        }
+                        else {
+                            toastr.warning("失敗しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+            })
+        });
     </script>
     <!-- BEGIN: Page JS-->
 {{--    <script src="{{asset('js/app-user-list.js')}}"></script>--}}

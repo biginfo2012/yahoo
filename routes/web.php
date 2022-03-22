@@ -21,6 +21,7 @@ Route::get('/', function () {
 Route::group(['middleware' => 'auth'], function (){
     Route::get('dashboard', [ShopController::class, 'storeManage'])->name('dashboard');
     Route::post('store-add', [ShopController::class, 'storeAdd'])->name('store-add');
+    Route::post('store-delete', [ShopController::class, 'storeDelete'])->name('store-delete');
     Route::get('store-product/{id}', [ProductController::class, 'storeProduct'])->name('store-product');
     Route::post('product-list', [ProductController::class, 'productList'])->name('product-list');
     Route::get('yahoo-auth-code', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');

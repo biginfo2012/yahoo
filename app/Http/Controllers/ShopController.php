@@ -17,7 +17,12 @@ class ShopController extends Controller
     }
 
     public function storeAdd(Request $request){
-        Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account]);
+        Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app]);
+        return response()->json(['status' => true]);
+    }
+
+    public function storeDelete(Request $request){
+        Shop::where('id', $request->store_id)->delete();
         return response()->json(['status' => true]);
     }
 }
