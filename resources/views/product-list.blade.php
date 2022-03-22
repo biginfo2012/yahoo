@@ -22,7 +22,27 @@
             <td>{{$item->product->price}}</td>
             <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
             <td>
-
+                <div class="d-inline-flex">
+                    <a class="pe-1 dropdown-toggle hide-arrow text-primary" data-bs-toggle="dropdown">
+                        <button class="dt-button buttons-collection btn btn-outline-secondary dropdown-toggle me-2"
+                                tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="true">
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                       stroke-linejoin="round" class="feather feather-external-link font-small-4 me-50">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                    <polyline points="15 3 21 3 21 9"></polyline>
+                                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                                </svg>複製
+                            </span>
+                        </button>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        @foreach($stores as $shop)
+                            <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                        @endforeach
+                    </div>
+                </div>
             </td>
         </tr>
     @endforeach

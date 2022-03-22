@@ -22,29 +22,35 @@ use function Symfony\Component\String\toString;
 class ProductController extends Controller
 {
     //
-    public function storeProduct($id){
-        $store_id= $id;
+    public function storeProduct($id)
+    {
+        $store_id = $id;
 // リクエストとコールバック間の検証用のランダムな文字列を指定してください
         $state = substr(str_shuffle('1234567890abcdefghijklmnopqrstuvwxyz'), 0, 10);
         // リプレイアタック対策のランダムな文字列を指定してください
         $nonce = substr(str_shuffle('1234567890abcdefghijklmnopqrstuvwxyz'), 0, 10);
+        $this->yahooGetCategory($id);
         return view('shop-product', compact('store_id', 'state', 'nonce'));
     }
-    public function productList(Request $request){
+
+    public function productList(Request $request)
+    {
         $store_id = $request->store_id;
         $page = $request->page;
 
-        $data = ShopProduct::with('product')->where('shop_id', $store_id)->orderBy('created_at', 'asc')
+        $data = ShopProduct::with('product')->where('shop_id', $store_id)->orderBy('updated_at', 'desc')
             ->offset(($page - 1) * 50)->limit(50)->get();
         $total = ShopProduct::where('shop_id', $store_id)->pluck('id')->count();
-        $page_count = (int)($total/50);
-        if($total > $page_count * 50){
-            $page_count = $page_count +1;
+        $page_count = (int)($total / 50);
+        if ($total > $page_count * 50) {
+            $page_count = $page_count + 1;
         }
-        return view('product-list', compact('data', 'total', 'page', 'page_count'));
+        $stores = Shop::where('id', '!=', $store_id)->get();
+        return view('product-list', compact('data', 'total', 'page', 'page_count', 'stores'));
     }
 
-    function generateRandomString($length = 10) {
+    function generateRandomString($length = 10)
+    {
         $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $charactersLength = strlen($characters);
         $randomString = '';
@@ -54,7 +60,8 @@ class ProductController extends Controller
         return $randomString;
     }
 
-    public function yahooAuthCode(){
+    public function yahooAuthCode()
+    {
         $client_id = env('YAHOO_CLIENT_ID');
         $client_secret = env('YAHOO_CLIENT_SECRET');
         $redirect_uri = env('YAHOO_CALLBACK');
@@ -85,7 +92,8 @@ class ProductController extends Controller
         return response()->json(['status' => true]);
     }
 
-    public function yahooCallback(Request $request){
+    public function yahooCallback(Request $request)
+    {
         $code = $request->code;
         $state = $request->state;
         Log::info("code: " . $code);
@@ -132,7 +140,8 @@ class ProductController extends Controller
         return redirect()->back();
     }
 
-    public function yahooRefresh(Request $request){
+    public function yahooRefresh(Request $request)
+    {
         $client_id = env('YAHOO_CLIENT_ID');
         $client_secret = env('YAHOO_CLIENT_SECRET');
         // クレデンシャルインスタンス生成
@@ -150,84 +159,30 @@ class ProductController extends Controller
         return redirect()->back();
     }
 
-    public function yahooGetCategory($id){
-        $store_id = $id;
+    public function yahooGetCategory($id)
+    {
+        //ShopCategory::where('shop_id', $id)->update(['get_status' => 0, 'start' => 1]);
+
         $access_token = YahooToken::find(1)->access_token;
         $authorization = "Authorization: Bearer " . $access_token;
 
         $seller_id = Shop::find($id)->store_account;
-//        $cateories = YahooCategory::where('store_id', $id)->where('is_leaf', 0)->whereNull('status')->orderBy('created_at', 'desc')->pluck('category_code')->toArray();
-//        foreach ($cateories as $index => $iValue) {
-//            $category_code = $iValue;
-//            $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/getShopCategory?seller_id=". $seller_id . "&category_code=" . $category_code;
-//            $org_curl = curl_init();
-//            curl_setopt($org_curl, CURLOPT_URL, $url);
-//            curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
-//            curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
-//            curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
-//
-//            $response = curl_exec($org_curl);
-//            curl_close($org_curl);
-//            $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
-//        //print_r($response);
-//        //print_r($data);
-//            $attr = $data['@attributes'];
-//            $total = (int)$attr['totalResultsAvailable'];
-//            //print_r($total);
-////        die();
-//            $result = $data['Result'];
-//            if($total != 1) {
-//                foreach ($result as $item){
-//                    $item = (array)$item;
-//                    //print_r($item['IsLeaf']);
-//                    YahooCategory::updateOrCreate(['store_id' => $id, 'category_code' => (string)$item['CategoryCode']], [
-//                        'store_id' => $id,
-//                        'category_code' => (string)$item['CategoryCode'],
-//                        'category_name' => (string)$item['CategoryName'],
-//                        'display' => $item['Display'],
-//                        'is_leaf' => $item['IsLeaf'],
-//                        'update_date' => date('Y-m-d', strtotime($item['UpdateDate']))
-//                    ]);
-//                }
-//            }
-//            else{
-//                $item = (array)$result;
-//                YahooCategory::updateOrCreate(['store_id' => $id, 'category_code' => (string)$item['CategoryCode']], [
-//                    'store_id' => $id,
-//                    'category_code' => (string)$item['CategoryCode'],
-//                    'category_name' => (string)$item['CategoryName'],
-//                    'display' => $item['Display'],
-//                    'is_leaf' => $item['IsLeaf'],
-//                    'update_date' => date('Y-m-d', strtotime($item['UpdateDate']))
-//                ]);
-//            }
-//            YahooCategory::where('category_code', $iValue)->where('store_id', $store_id)->update(['status' => 1]);
-//        }
-        //
-        //https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/stCategoryList
-        //https://shopping.yahooapis.jp/ShoppingWebService/V1/itemSearch?appid=<あなたのアプリケーションID>&query=vaio
-        //https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/getShopCategory
-
-        //$category = ShopCategory::where('shop_id', $id)->whereNull('status')->orderBy('created_at', 'desc')->first();
-        //if(isset($category)){
-            //$pagekey = $category->pagekey;
+        try {
             $org_curl = curl_init();
             $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/stCategoryList?seller_id=" . $seller_id;
             curl_setopt($org_curl, CURLOPT_URL, $url);
-            curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
+            curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization));
             curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
             curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
             $response = curl_exec($org_curl);
-            print_r($response);
-            die();
             $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
             $attr = $data['@attributes'];
             $total = (int)$attr['totalResultsAvailable'];
             $result = $data['Result'];
-            if($total > 0){
-                if($total != 1) {
-                    foreach ($result as $item){
+            if ($total > 0) {
+                if ($total != 1) {
+                    foreach ($result as $item) {
                         $item = (array)$item;
                         //print_r($item['IsLeaf']);
                         Log::info('Shop Category Name: ' . $item['Name']);
@@ -239,8 +194,7 @@ class ProductController extends Controller
                             'updatetime' => date('Y-m-d H:i:s', strtotime($item['UpdateTime']))
                         ]);
                     }
-                }
-                else{
+                } else {
                     $item = (array)$result;
                     Log::info('Shop Category Name: ' . $item['Name']);
                     ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
@@ -252,13 +206,17 @@ class ProductController extends Controller
                     ]);
                 }
             }
-            ShopCategory::where('pagekey', $pagekey)->where('shop_id', $store_id)->update(['status' => 1]);
-        //}
+        }
+        catch (ErrorException $e){
+            Log::error('Get Category Error');
+        }
 
 
-        return redirect()->back();
+        //return redirect()->back();
     }
-    public function yahooSearchProduct1($id){
+
+    public function yahooSearchProduct1($id)
+    {
         $access_token = YahooToken::find(1)->access_token;
 
         $seller_id = Shop::find($id)->store_account;
@@ -266,9 +224,9 @@ class ProductController extends Controller
         $total = 100000;
         $start = 1;
 
-        while ($start < $total){
+        while ($start < $total) {
             $org_curl = curl_init();
-            $url = "https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch?appid=". env('YAHOO_CLIENT_ID') ."&seller_id=" . $seller_id .
+            $url = "https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch?appid=" . env('YAHOO_CLIENT_ID') . "&seller_id=" . $seller_id .
                 "&genre_category_id=13457&start=" . $start . "&results=100";
             curl_setopt($org_curl, CURLOPT_URL, $url);
             //curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
@@ -284,8 +242,7 @@ class ProductController extends Controller
             $result = $data->hits;
             $total = (int)$data->totalResultsAvailable;
 
-            foreach ($result as $item)
-            {
+            foreach ($result as $item) {
                 $product_id = Product::updateOrCreate(['name' => $item->name], [
                     'name' => $item->name,
                     'price' => $item->price,
@@ -304,43 +261,54 @@ class ProductController extends Controller
         //return redirect()->back();
     }
 
-    public function yahooSearchProduct($id){
+    public function yahooSearchProduct($id)
+    {
         $access_token = YahooToken::find(1)->access_token;
         $authorization = "Authorization: Bearer " . $access_token;
         $seller_id = Shop::find($id)->store_account;
         $total = 100000;
         $start = 1;
         $category = ShopCategory::where('shop_id', $id)->where('get_status', '!=', 2)->orderBy('id', 'asc')->first();
-        if(isset($category)){
+        if (isset($category)) {
             $pagekey = $category->pagekey;
-            if(isset($category->start)){
+            if (isset($category->start)) {
                 $start = $category->start + 100;
             }
-            if(isset($category->total)){
+            if (isset($category->total)) {
                 $total = $category->total;
             }
 
-            if($start > $total){
+            if ($start > $total) {
                 ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['get_status' => 2]);
-            }
-            else{
-                $org_curl = curl_init();
-                $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/myItemList?seller_id=" . $seller_id . "&start=" . $start . "&results=100" . "&stcat_key=" . $pagekey;
-                curl_setopt($org_curl, CURLOPT_URL, $url);
-                curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
-                curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
-                curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
+            } else {
+                try {
+                    $org_curl = curl_init();
+                    $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/myItemList?seller_id=" . $seller_id . "&start=" . $start . "&results=100" . "&stcat_key=" . $pagekey;
+                    curl_setopt($org_curl, CURLOPT_URL, $url);
+                    curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization));
+                    curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
+                    curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
-                $response = curl_exec($org_curl);
-                $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
-                $attr = $data['@attributes'];
-                $total = (int)$attr['totalResultsAvailable'];
-                $result = $data['Result'];
-                if($total > 0){
-                    Log::info("category_code: " . $pagekey);
-                    if($total != 1) {
-                        foreach ($result as $item){
-                            $item = (array)$item;
+                    $response = curl_exec($org_curl);
+                    print_r($response);
+                    die();
+                    $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
+                    $attr = $data['@attributes'];
+                    $total = (int)$attr['totalResultsAvailable'];
+                    $result = $data['Result'];
+                    if ($total > 0) {
+                        Log::info("category_code: " . $pagekey);
+                        if ($total != 1) {
+                            foreach ($result as $item) {
+                                $item = (array)$item;
+                                Log::info("item->name: " . $item['Name']);
+                                ShopProduct::updateOrCreate(['shop_id' => $id, 'item_code' => $item['ItemCode']], [
+                                    'shop_id' => $id,
+                                    'item_code' => $item['ItemCode'],
+                                ]);
+                            }
+                        } else {
+                            $item = (array)$result;
                             Log::info("item->name: " . $item['Name']);
                             ShopProduct::updateOrCreate(['shop_id' => $id, 'item_code' => $item['ItemCode']], [
                                 'shop_id' => $id,
@@ -348,16 +316,12 @@ class ProductController extends Controller
                             ]);
                         }
                     }
-                    else{
-                        $item = (array)$result;
-                        Log::info("item->name: " . $item['Name']);
-                        ShopProduct::updateOrCreate(['shop_id' => $id, 'item_code' => $item['ItemCode']], [
-                            'shop_id' => $id,
-                            'item_code' => $item['ItemCode'],
-                        ]);
-                    }
+                    ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['get_status' => 1, 'total' => $total, 'start' => $start]);
                 }
-                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['get_status' => 1, 'total' => $total, 'start' => $start]);
+                catch (ErrorException $e){
+                    Log::error('Search Product Error');
+                }
+
             }
         }
 
@@ -365,18 +329,19 @@ class ProductController extends Controller
         //return redirect()->back();
     }
 
-    public function yahooProductItem($id){
+    public function yahooProductItem($id)
+    {
         $access_token = YahooToken::find(1)->access_token;
         $authorization = "Authorization: Bearer " . $access_token;
         $seller_id = Shop::find($id)->store_account;
         $products = ShopProduct::where('shop_id', $id)->whereNull('status')->orderBy('id', 'asc')->take(100)->get();
-        foreach ($products as $product){
-
+        foreach ($products as $product) {
+            try{
                 $item_code = $product->item_code;
                 $org_curl = curl_init();
                 $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/getItem?seller_id=" . $seller_id . "&item_code=" . $item_code;
                 curl_setopt($org_curl, CURLOPT_URL, $url);
-                curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
+                curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization));
                 curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
                 curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
@@ -386,18 +351,18 @@ class ProductController extends Controller
                 $total = (int)$attr['totalResultsReturned'];
                 $result = $data['Result'];
 
-                if($total == 1) {
+                if ($total == 1) {
                     $item = (array)$result;
                     Log::info("item->name: " . $item['Name']);
                     $release_date = empty($item['ReleaseDate']) ? null : date('Y-m-d', strtotime($item['ReleaseDate']));
-                    $sale_period_start= empty($item['SalePeriodStart']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodStart']));
-                    $sale_period_end= empty($item['SalePeriodEnd']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodEnd']));
+                    $sale_period_start = empty($item['SalePeriodStart']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodStart']));
+                    $sale_period_end = empty($item['SalePeriodEnd']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodEnd']));
                     $item_image_urls = $item['Image'];
                     $pathlist = (array)$item['PathList'];
                     $path = $pathlist['Path'];
-                    for($i = 1; $i <= 20; $i++){
+                    for ($i = 1; $i <= 20; $i++) {
                         $key = 'LibImage' . $i;
-                        if(!empty($item[$key])){
+                        if (!empty($item[$key])) {
                             $item_image_urls = $item_image_urls . ';' . $item[$key];
                         }
                     }
@@ -441,17 +406,18 @@ class ProductController extends Controller
                         'keep_stock' => (int)$item['KeepStock'],
                         'postage_set' => (int)$item['PostageSet'],
                         'is_drug' => (int)$item['IsDrug'],
-                        'item_tag'=>(string)$item['ItemTag']
+                        'item_tag' => (string)$item['ItemTag']
                     ];
 
                     Product::where('id', $product->product_id)->delete();
                     $id = Product::create($data)->id;
                     ShopProduct::where('id', $product->id)->update(['status' => 1, 'product_id' => $id]);
                 }
-
+            }
+            catch (ErrorException $e){
+                Log::error('Product Detail Error');
+            }
         }
-
-
         return response()->json(['status' => true]);
     }
 }

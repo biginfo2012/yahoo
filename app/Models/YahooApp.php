@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Shop extends Model
+class YahooApp extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'store_name',
-        'store_account',
-        'app_id'
+        'client_id',
+        'client_secret',
+        'app_name'
     ];
 }

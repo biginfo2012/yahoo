@@ -48,23 +48,36 @@ class GetShopCategory extends Command
         $category = ShopCategory::where('shop_id', $id)->whereNull('status')->orderBy('id', 'asc')->first();
         if(isset($category)){
             $pagekey = $category->pagekey;
-            $org_curl = curl_init();
-            $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/stCategoryList?seller_id=" . $seller_id . "&page_key=" . $pagekey;
-            curl_setopt($org_curl, CURLOPT_URL, $url);
-            curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
-            curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
-            curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
+            try {
+                $org_curl = curl_init();
+                $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/stCategoryList?seller_id=" . $seller_id . "&page_key=" . $pagekey;
+                curl_setopt($org_curl, CURLOPT_URL, $url);
+                curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json' , $authorization));
+                curl_setopt($org_curl, CURLOPT_CUSTOMREQUEST, "GET");
+                curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
-            $response = curl_exec($org_curl);
-            $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
-            $attr = $data['@attributes'];
-            $total = (int)$attr['totalResultsAvailable'];
-            $result = $data['Result'];
-            if($total > 0){
-                if($total != 1) {
-                    foreach ($result as $item){
-                        $item = (array)$item;
-                        //print_r($item['IsLeaf']);
+                $response = curl_exec($org_curl);
+                $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
+                $attr = $data['@attributes'];
+                $total = (int)$attr['totalResultsAvailable'];
+                $result = $data['Result'];
+                if($total > 0){
+                    if($total != 1) {
+                        foreach ($result as $item){
+                            $item = (array)$item;
+                            //print_r($item['IsLeaf']);
+                            Log::info('Shop Category Name: ' . $item['Name']);
+                            ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
+                                'shop_id' => $id,
+                                'pagekey' => (string)$item['PageKey'],
+                                'name' => (string)$item['Name'],
+                                'display' => $item['Display'],
+                                'updatetime' => date('Y-m-d H:i:s', strtotime($item['UpdateTime']))
+                            ]);
+                        }
+                    }
+                    else{
+                        $item = (array)$result;
                         Log::info('Shop Category Name: ' . $item['Name']);
                         ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
                             'shop_id' => $id,
@@ -75,19 +88,12 @@ class GetShopCategory extends Command
                         ]);
                     }
                 }
-                else{
-                    $item = (array)$result;
-                    Log::info('Shop Category Name: ' . $item['Name']);
-                    ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
-                        'shop_id' => $id,
-                        'pagekey' => (string)$item['PageKey'],
-                        'name' => (string)$item['Name'],
-                        'display' => $item['Display'],
-                        'updatetime' => date('Y-m-d H:i:s', strtotime($item['UpdateTime']))
-                    ]);
-                }
+                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['status' => 1]);
             }
-            ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['status' => 1]);
+            catch (\ErrorException $e){
+                Log::error('Get Shop Category Error');
+            }
+
         }
         return 0;
     }

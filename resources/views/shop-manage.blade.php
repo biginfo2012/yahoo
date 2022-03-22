@@ -61,6 +61,14 @@
                                     <label class="form-label" for="basic-icon-default-uname">ストアアカウント</label>
                                     <input type="text" class="form-control dt-uname" placeholder="ストアアカウント" name="store_account" required/>
                                 </div>
+                                <div class="mb-1">
+                                    <label class="form-label" for="role">アプリケーション</label>
+                                    <select class="form-select" id="app" name="app">
+                                        @foreach($apps as $app)
+                                            <option value="{{$app->id}}">{{$app->app_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <button type="submit" class="btn btn-primary me-1 data-submit" id="saveBtn">追加</button>
                                 <button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal">
                                     キャンセル
