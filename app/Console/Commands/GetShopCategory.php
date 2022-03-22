@@ -41,12 +41,14 @@ class GetShopCategory extends Command
      */
     public function handle()
     {
-        $access_token = YahooToken::find(1)->access_token;
-        $authorization = "Authorization: Bearer " . $access_token;
-        $id= 2;
-        $seller_id = Shop::find($id)->store_account;
-        $category = ShopCategory::where('shop_id', $id)->whereNull('status')->orderBy('id', 'asc')->first();
+        $category = ShopCategory::whereNull('status')->orderBy('id', 'asc')->first();
         if(isset($category)){
+            $shop_id = $category->shop_id;
+            $shop = Shop::with('app')->find($shop_id);
+            $seller_id = $shop->store_account;
+            $app_id = $shop->app->id;
+            $access_token = YahooToken::find($app_id)->access_token;
+            $authorization = "Authorization: Bearer " . $access_token;
             $pagekey = $category->pagekey;
             try {
                 $org_curl = curl_init();
@@ -67,8 +69,8 @@ class GetShopCategory extends Command
                             $item = (array)$item;
                             //print_r($item['IsLeaf']);
                             Log::info('Shop Category Name: ' . $item['Name']);
-                            ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
-                                'shop_id' => $id,
+                            ShopCategory::updateOrCreate(['shop_id' => $shop_id, 'pagekey' => (string)$item['PageKey']], [
+                                'shop_id' => $shop_id,
                                 'pagekey' => (string)$item['PageKey'],
                                 'name' => (string)$item['Name'],
                                 'display' => $item['Display'],
@@ -79,8 +81,8 @@ class GetShopCategory extends Command
                     else{
                         $item = (array)$result;
                         Log::info('Shop Category Name: ' . $item['Name']);
-                        ShopCategory::updateOrCreate(['shop_id' => $id, 'pagekey' => (string)$item['PageKey']], [
-                            'shop_id' => $id,
+                        ShopCategory::updateOrCreate(['shop_id' => $shop_id, 'pagekey' => (string)$item['PageKey']], [
+                            'shop_id' => $shop_id,
                             'pagekey' => (string)$item['PageKey'],
                             'name' => (string)$item['Name'],
                             'display' => $item['Display'],
@@ -88,7 +90,7 @@ class GetShopCategory extends Command
                         ]);
                     }
                 }
-                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $id)->update(['status' => 1]);
+                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $shop_id)->update(['status' => 1]);
             }
             catch (\ErrorException $e){
                 Log::error('Get Shop Category Error');

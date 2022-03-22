@@ -53,7 +53,7 @@ class GetToken extends Command
             // YConnectクライアントインスタンス生成
             $client = new YConnectClient($cred);
             // 保存していたリフレッシュトークンを指定してください
-            $refresh_token = YahooToken::find(1)->refresh_token;
+            $refresh_token = YahooToken::find($app_id)->refresh_token;
             // Tokenエンドポイントにリクエストしてアクセストークンを更新
             $client->refreshAccessToken($refresh_token);
             $access_token = $client->getAccessToken();
