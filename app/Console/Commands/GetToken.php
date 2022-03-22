@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\YahooApp;
 use App\Models\YahooToken;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -41,20 +42,26 @@ class GetToken extends Command
      */
     public function handle()
     {
-        $client_id = env('YAHOO_CLIENT_ID');
-        $client_secret = env('YAHOO_CLIENT_SECRET');
-        // クレデンシャルインスタンス生成
-        $cred = new ClientCredential($client_id, $client_secret);
-        // YConnectクライアントインスタンス生成
-        $client = new YConnectClient($cred);
-        // 保存していたリフレッシュトークンを指定してください
-        $refresh_token = YahooToken::find(1)->refresh_token;
-        // Tokenエンドポイントにリクエストしてアクセストークンを更新
-        $client->refreshAccessToken($refresh_token);
-        $access_token = $client->getAccessToken();
-        Log::info('get token from refresh token: ' . $access_token);
-        // IDトークンを検証
-        YahooToken::updateOrCreate(['id' => 1], ['access_token' => $access_token]);
+        $tokens = YahooToken::all();
+        foreach ($tokens as $token){
+            $app_id = $token->app_id;
+            $app = YahooApp::find($app_id);
+            $client_id = $app->client_id;
+            $client_secret = $app->client_secret;
+            // クレデンシャルインスタンス生成
+            $cred = new ClientCredential($client_id, $client_secret);
+            // YConnectクライアントインスタンス生成
+            $client = new YConnectClient($cred);
+            // 保存していたリフレッシュトークンを指定してください
+            $refresh_token = YahooToken::find(1)->refresh_token;
+            // Tokenエンドポイントにリクエストしてアクセストークンを更新
+            $client->refreshAccessToken($refresh_token);
+            $access_token = $client->getAccessToken();
+            Log::info('get token from refresh token: ' . $access_token);
+            // IDトークンを検証
+            YahooToken::updateOrCreate(['id' => $token->id], ['access_token' => $access_token]);
+        }
+
         return 0;
     }
 }

@@ -13,4 +13,7 @@ class Shop extends Model
         'store_account',
         'app_id'
     ];
+    public function app(){
+        return $this->hasOne(YahooApp::class, 'id', 'app_id');
+    }
 }

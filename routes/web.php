@@ -24,7 +24,7 @@ Route::group(['middleware' => 'auth'], function (){
     Route::post('store-delete', [ShopController::class, 'storeDelete'])->name('store-delete');
     Route::get('store-product/{id}', [ProductController::class, 'storeProduct'])->name('store-product');
     Route::post('product-list', [ProductController::class, 'productList'])->name('product-list');
-    Route::get('yahoo-auth-code', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');
+    Route::get('yahoo-auth-code/{id}', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');
     Route::get('yahoo_callback', [ProductController::class, 'yahooCallback'])->name('yahoo_callback');
     Route::get('yahoo-refresh', [ProductController::class, 'yahooRefresh'])->name('yahoo-refresh');
     Route::get('yahoo-get-category/{id}', [ProductController::class, 'yahooGetCategory'])->name('yahoo-get-category');

@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Shop;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
+use App\Models\YahooApp;
 use App\Models\YahooCategory;
 use App\Models\YahooToken;
 use ErrorException;
@@ -60,14 +61,16 @@ class ProductController extends Controller
         return $randomString;
     }
 
-    public function yahooAuthCode()
+    public function yahooAuthCode($id)
     {
-        $client_id = env('YAHOO_CLIENT_ID');
-        $client_secret = env('YAHOO_CLIENT_SECRET');
+        $shop = Shop::with('app')->where('id', $id)->first();
+        $app_id = $shop->app->id;
+        $client_id = $shop->app->client_id;
+        $client_secret = $shop->app->client_secret;
         $redirect_uri = env('YAHOO_CALLBACK');
         $state = $this->generateRandomString(35);
-        // リプレイアタック対策のランダムな文字列を指定してください
         $nonce = $this->generateRandomString(60);
+        YahooToken::updateOrCreate(['app_id' => $app_id], ['state' => $state, 'nonce' => $nonce, 'app_id' => $app_id]);
         $response_type = ResponseType::CODE;
         $scope = array(
             OIDConnectScope::OPENID,
@@ -86,9 +89,6 @@ class ProductController extends Controller
         $client = new YConnectClient($cred);
         // Authorizationエンドポイントにリクエスト
         $client->requestAuth($redirect_uri, $state, $nonce, $response_type, $scope, $display, $prompt);
-
-        YahooToken::updateOrCreate(['id' => 1], ['state' => $state, 'nonce' => $nonce]);
-
         return response()->json(['status' => true]);
     }
 
@@ -96,10 +96,11 @@ class ProductController extends Controller
     {
         $code = $request->code;
         $state = $request->state;
-        Log::info("code: " . $code);
-        $client_id = env('YAHOO_CLIENT_ID');
-        $client_secret = env('YAHOO_CLIENT_SECRET');
-        $redirect_uri = "http://yahooshop.info/yahoo_callback/";
+        $app_id = YahooToken::where('state', $state)->first()->app_id;
+        $app = YahooApp::find($app_id);
+        $client_id = $app->client_id;
+        $client_secret = $app->client_secret;
+        $redirect_uri = env('YAHOO_CALLBACK');
 
         $ch = curl_init();
         $grant_type = "authorization_code";
@@ -123,12 +124,6 @@ class ProductController extends Controller
         $cred = new ClientCredential($client_id, $client_secret);
         // YConnectクライアントインスタンス生成
         $client = new YConnectClient($cred);
-
-//        $state = YahooToken::find(1)->state;
-//        $nonce = YahooToken::find(1)->nonce;
-        // 認可コードを取得
-        //$code_result = $client->getAuthorizationCode($state);
-        //Log::info("code_result: " . $code_result);
         // Tokenエンドポイントにリクエスト
         $client->requestAccessToken(
             $redirect_uri,
@@ -136,7 +131,7 @@ class ProductController extends Controller
         );
         $access_token = $client->getAccessToken();
         // IDトークンを検証
-        YahooToken::updateOrCreate(['id' => 1], ['access_token' => $access_token, 'refresh_token' => $client->getRefreshToken()]);
+        YahooToken::updateOrCreate(['app_id' => $app_id], ['access_token' => $access_token, 'refresh_token' => $client->getRefreshToken()]);
         return redirect()->back();
     }
 

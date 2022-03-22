@@ -9,6 +9,7 @@ class YahooToken extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'app_id',
         'access_token',
         'refresh_token',
         'state',

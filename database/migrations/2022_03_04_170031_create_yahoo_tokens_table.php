@@ -19,6 +19,7 @@ class CreateYahooTokensTable extends Migration
             $table->longText('refresh_token')->nullable();
             $table->string('state')->nullable();
             $table->string('nonce')->nullable();
+            $table->integer('app_id')->nullable();
             $table->timestamps();
         });
     }
