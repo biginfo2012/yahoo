@@ -53,6 +53,11 @@ $stores = Shop::all();
         <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
             <li class="{{ str_contains(\Request::route()->getName(), 'dashboard') ? 'active' : '' }} nav-item">
                 <a class="d-flex align-items-center" href="{{route('dashboard')}}">
+                    <i data-feather="grid"></i><span class="menu-title text-truncate" data-i18n="Email">アプリケーション</span>
+                </a>
+            </li>
+            <li class="{{ str_contains(\Request::route()->getName(), 'store-manage') ? 'active' : '' }} nav-item">
+                <a class="d-flex align-items-center" href="{{route('store-manage')}}">
                     <i data-feather="shopping-cart"></i><span class="menu-title text-truncate" data-i18n="Email">店舗</span>
                 </a>
             </li>

@@ -19,7 +19,10 @@ Route::get('/', function () {
     return view('auth.login');
 });
 Route::group(['middleware' => 'auth'], function (){
-    Route::get('dashboard', [ShopController::class, 'storeManage'])->name('dashboard');
+    Route::get('dashboard', [ShopController::class, 'appManage'])->name('dashboard');
+    Route::post('app-add', [ShopController::class, 'appAdd'])->name('app-add');
+    Route::post('app-delete', [ShopController::class, 'appDelete'])->name('app-delete');
+    Route::get('store-manage', [ShopController::class, 'storeManage'])->name('store-manage');
     Route::post('store-add', [ShopController::class, 'storeAdd'])->name('store-add');
     Route::post('store-delete', [ShopController::class, 'storeDelete'])->name('store-delete');
     Route::get('store-product/{id}', [ProductController::class, 'storeProduct'])->name('store-product');
