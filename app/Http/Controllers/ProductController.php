@@ -63,10 +63,10 @@ class ProductController extends Controller
 
     public function yahooAuthCode($id)
     {
-        $shop = Shop::with('app')->where('id', $id)->first();
-        $app_id = $shop->app->id;
-        $client_id = $shop->app->client_id;
-        $client_secret = $shop->app->client_secret;
+        $app = YahooApp::find($id);
+        $app_id = $app->id;
+        $client_id = $app->client_id;
+        $client_secret = $app->client_secret;
         $redirect_uri = env('YAHOO_CALLBACK');
         $state = $this->generateRandomString(35);
         $nonce = $this->generateRandomString(60);
@@ -157,10 +157,10 @@ class ProductController extends Controller
     public function yahooGetCategory($id)
     {
         //ShopCategory::where('shop_id', $id)->update(['get_status' => 0, 'start' => 1]);
-
-        $access_token = YahooToken::find(1)->access_token;
+        $shop = Shop::with('app')->find($id);
+        $app_id = $shop->app->id;
+        $access_token = YahooToken::find($app_id)->access_token;
         $authorization = "Authorization: Bearer " . $access_token;
-
         $seller_id = Shop::find($id)->store_account;
         try {
             $org_curl = curl_init();
@@ -205,8 +205,6 @@ class ProductController extends Controller
         catch (ErrorException $e){
             Log::error('Get Category Error');
         }
-
-
         //return redirect()->back();
     }
 
