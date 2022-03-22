@@ -42,13 +42,15 @@ class GetProductDetail extends Command
      */
     public function handle()
     {
-        $id= 2;
-        $access_token = YahooToken::find(1)->access_token;
-        $authorization = "Authorization: Bearer " . $access_token;
-        $seller_id = Shop::find($id)->store_account;
-        $products = ShopProduct::where('shop_id', $id)->whereNull('status')->orderBy('id', 'asc')->take(100)->get();
+        $products = ShopProduct::whereNull('status')->orderBy('id', 'asc')->take(100)->get();
         foreach ($products as $product){
             try {
+                $shop_id = $product->shop_id;
+                $shop = Shop::with('app')->find($shop_id);
+                $seller_id = $shop->store_account;
+                $app_id = $shop->app->id;
+                $access_token = YahooToken::find($app_id)->access_token;
+                $authorization = "Authorization: Bearer " . $access_token;
                 $item_code = $product->item_code;
                 $org_curl = curl_init();
                 $url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/getItem?seller_id=" . $seller_id . "&item_code=" . $item_code;

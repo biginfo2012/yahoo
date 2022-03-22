@@ -24,10 +24,10 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        //$schedule->command('command:get-product')->everyMinute();
-//        $schedule->command('command:get-category')->everyTenMinutes();
+        //$schedule->command('command:get-category')->everyTenMinutes();
         $schedule->command('command:get-token')->everyTenMinutes();
         $schedule->command('command:get-shop-category')->everyMinute();
+        //$schedule->command('command:get-product')->everyMinute();
         //$schedule->command('command:get-product-detail')->everyMinute();
     }
 

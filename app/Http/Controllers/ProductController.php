@@ -283,8 +283,6 @@ class ProductController extends Controller
                     curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
                     $response = curl_exec($org_curl);
-                    print_r($response);
-                    die();
                     $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
                     $attr = $data['@attributes'];
                     $total = (int)$attr['totalResultsAvailable'];
