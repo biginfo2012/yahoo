@@ -27,8 +27,8 @@ class Kernel extends ConsoleKernel
         //$schedule->command('command:get-category')->everyTenMinutes();
         $schedule->command('command:get-token')->everyTenMinutes();
         $schedule->command('command:get-shop-category')->everyMinute();
-        //$schedule->command('command:get-product')->everyMinute();
-        //$schedule->command('command:get-product-detail')->everyMinute();
+        $schedule->command('command:get-product')->everyMinute();
+        $schedule->command('command:get-product-detail')->everyMinute();
     }
 
     /**

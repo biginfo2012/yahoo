@@ -53,7 +53,7 @@ class GetProduct extends Command
             $shop = Shop::with('app')->find($shop_id);
             $seller_id = $shop->store_account;
             $app_id = $shop->app->id;
-            $access_token = YahooToken::find($app_id)->access_token;
+            $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
             $authorization = "Authorization: Bearer " . $access_token;
             $pagekey = $category->pagekey;
             if(isset($category->start)){
@@ -76,13 +76,15 @@ class GetProduct extends Command
                     curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
                     $response = curl_exec($org_curl);
+                    Log::info("Get Product Response: " . $response);
                     $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
                     $attr = $data['@attributes'];
                     $total = (int)$attr['totalResultsAvailable'];
+                    $total_return = (int)$attr['totalResultsReturned'];
                     $result = $data['Result'];
-                    if($total > 0){
+                    if($total_return > 0){
                         Log::info("category_code: " . $pagekey);
-                        if($total != 1) {
+                        if($total_return != 1) {
                             foreach ($result as $item){
                                 $item = (array)$item;
                                 Log::info("item->name: " . $item['Name']);

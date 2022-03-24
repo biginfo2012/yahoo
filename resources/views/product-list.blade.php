@@ -39,7 +39,7 @@
                     </a>
                     <div class="dropdown-menu dropdown-menu-end">
                         @foreach($stores as $shop)
-                            <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                            <a href="javascript:;" class="dropdown-item product-copy" data-shop="{{$shop->id}}" data-id="{{$item->id}}">{{$shop->store_name}}</a>
                         @endforeach
                     </div>
                 </div>

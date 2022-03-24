@@ -18,6 +18,7 @@ class CreateShopsTable extends Migration
             $table->string('store_name');
             $table->string('store_account');
             $table->integer('app_id');
+            $table->string('prefix');
             $table->timestamps();
         });
     }

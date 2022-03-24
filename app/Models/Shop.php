@@ -11,7 +11,8 @@ class Shop extends Model
     protected $fillable = [
         'store_name',
         'store_account',
-        'app_id'
+        'app_id',
+        'prefix'
     ];
     public function app(){
         return $this->hasOne(YahooApp::class, 'id', 'app_id');

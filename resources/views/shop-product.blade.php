@@ -19,8 +19,50 @@
 {{--                                    <a href="{{route('yahoo-auth-code', $store_id)}}" class="dt-button add-new btn btn-primary"><span>AuthCode取得</span></a>--}}
 {{--                                    <a href="{{route('yahoo-refresh')}}" class="dt-button add-new btn btn-primary"><span>Refresh取得</span></a>--}}
 {{--                                    <a href="{{route('yahoo-get-category', $store_id)}}" class="dt-button add-new btn btn-primary"><span>カテゴリ取得</span></a>--}}
-                                    <a href="{{route('yahoo-search-product', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品取得</span></a>
 {{--                                    <a href="{{route('yahoo-product-item', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品詳細</span></a>--}}
+                                    <div class="d-inline-flex">
+                                        <a class="pe-1 dropdown-toggle hide-arrow text-primary" data-bs-toggle="dropdown">
+                                            <button class="dt-button buttons-collection btn btn-outline-secondary dropdown-toggle me-2"
+                                                    tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="true">
+                                                <span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                         stroke-linejoin="round" class="feather feather-external-link font-small-4 me-50">
+                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                                    </svg>一括複製
+                                                </span>
+                                            </button>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            @foreach($stores as $shop)
+                                                <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div class="d-inline-flex">
+                                        <a class="pe-1 dropdown-toggle hide-arrow text-primary" data-bs-toggle="dropdown">
+                                            <button class="dt-button buttons-collection btn btn-outline-secondary dropdown-toggle me-2"
+                                                    tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="true">
+                                                <span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                         stroke-linejoin="round" class="feather feather-external-link font-small-4 me-50">
+                                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                                    </svg>選択複製
+                                                </span>
+                                            </button>
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-end">
+                                            @foreach($stores as $shop)
+                                                <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <a href="{{route('yahoo-search-product', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品取得</span></a>
                                 </div>
                             </div>
                         </div>
@@ -41,6 +83,7 @@
         <!-- users list ends -->
     </div>
     <script>
+        let product_copy = '{{route('product-copy')}}';
         $(document).ready(function () {
             $('.menu_item').each(function () {
                 if($(this).data('id') == $('#store_id').val()){
@@ -49,6 +92,35 @@
                 else{
                     $(this).removeClass('active')
                 }
+            });
+            $(document).on('click', '.product-copy', function () {
+                let id = $(this).data('id');
+                let shop_id = $(this).data('shop');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                $.ajax({
+                    url: product_copy,
+                    type:'post',
+                    data: {
+                        id : id,
+                        shop_id : shop_id
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        if(response.status == true){
+                            toastr.success("成功しました。");
+                        }
+                        else {
+                            toastr.warning("失敗しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
             })
         })
     </script>

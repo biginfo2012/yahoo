@@ -32,7 +32,7 @@ class ShopController extends Controller
     }
 
     public function storeAdd(Request $request){
-        Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app]);
+        Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app, 'prefix' => $request->prefix]);
         return response()->json(['status' => true]);
     }
 

@@ -26,19 +26,19 @@ class ProductController extends Controller
     public function storeProduct($id)
     {
         $store_id = $id;
-// リクエストとコールバック間の検証用のランダムな文字列を指定してください
+        // リクエストとコールバック間の検証用のランダムな文字列を指定してください
         $state = substr(str_shuffle('1234567890abcdefghijklmnopqrstuvwxyz'), 0, 10);
         // リプレイアタック対策のランダムな文字列を指定してください
         $nonce = substr(str_shuffle('1234567890abcdefghijklmnopqrstuvwxyz'), 0, 10);
         $this->yahooGetCategory($id);
-        return view('shop-product', compact('store_id', 'state', 'nonce'));
+        $stores = Shop::where('id', '!=', $store_id)->get();
+        return view('shop-product', compact('store_id', 'state', 'nonce', 'stores'));
     }
 
     public function productList(Request $request)
     {
         $store_id = $request->store_id;
         $page = $request->page;
-
         $data = ShopProduct::with('product')->where('shop_id', $store_id)->orderBy('updated_at', 'desc')
             ->offset(($page - 1) * 50)->limit(50)->get();
         $total = ShopProduct::where('shop_id', $store_id)->pluck('id')->count();
@@ -48,6 +48,93 @@ class ProductController extends Controller
         }
         $stores = Shop::where('id', '!=', $store_id)->get();
         return view('product-list', compact('data', 'total', 'page', 'page_count', 'stores'));
+    }
+
+    public function productCopy(Request $request){
+        $shop_product = ShopProduct::find($request->id);
+        $item_code = $shop_product->item_code;
+        $product_id = $shop_product->product_id;
+        $codes = explode('-', $item_code);
+        if(count($codes) == 2){
+            $code = $codes[1];
+        }
+        else{
+            $code = $codes[0];
+        }
+        $prefix = Shop::find($request->shop_id)->prefix;
+        $copy_code = $prefix . '-' . $code;
+        $is_ex = ShopProduct::where('item_code', $copy_code)->first();
+
+        if(isset($is_ex)){
+            return response()->json(['status' => false]);
+        }
+
+        $product = Product::find($product_id);
+        $shop_id = $request->shop_id;
+        $shop = Shop::with('app')->find($shop_id);
+        $seller_id = $shop->store_account;
+        $app_id = $shop->app->id;
+        $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
+        $authorization = "Authorization: Bearer " . $access_token;
+        $postData = [
+            "seller_id" => $seller_id,
+            "item_code" => $copy_code,
+            "path" => $product->path,
+            "name" => $product->name,
+            "price" => $product->price,
+            "product_category" => $product->product_category,
+            "headline" => $product->headline,
+            "item_image_urls" => $product->item_image_urls,
+            "caption" => $product->caption,
+            "explanation" => $product->explanation,
+            "taxable" => $product->taxable,
+            "taxrate_type" => $product->taxrate_type,
+            "display" => $product->display,
+            "delivery" => $product->delivery,
+            "lead_time_instock" => $product->lead_time_instock,
+            "keep_stock" => $product->keep_stock,
+            "postage_set" => $product->postage_set,
+        ];
+
+        //$org_curl = curl_init();
+        //$url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/editItem";
+//        curl_setopt($org_curl, CURLOPT_POST, 1);
+//        curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization));
+//        curl_setopt($org_curl, CURLOPT_POSTFIELDS, json_encode($postData));
+//        curl_setopt($org_curl, CURLOPT_URL, $url);
+//        curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
+//        curl_setopt_array($org_curl, array(
+//            CURLOPT_URL => $url,
+//            CURLOPT_HTTPHEADER => array('Content-Type: application/json' , $authorization),
+//            CURLOPT_RETURNTRANSFER => true,
+//            CURLOPT_ENCODING => "",
+//            CURLOPT_TIMEOUT => 30000,
+//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+//            CURLOPT_CUSTOMREQUEST => "POST",
+//            CURLOPT_POSTFIELDS => json_encode($postData),
+//        ));
+
+        $url = "seller_id=" . $seller_id . "&path=" . $product->path . "&item_code=" . $copy_code
+            . "&name=" . $product->name . "&price=" . $product->price . "&product_category=" . $product->product_category . "&headline=" . $product->headline
+            . "&item_image_urls=" .$product->item_image_urls . "&caption=" . $product->caption . "&explanation=" . $product->explanation . "&taxable=" . $product->taxable
+            . "&taxrate_type=" . $product->taxrate_type . "&display=" . $product->display . "&delivery=" . $product->delivery
+            . "&lead_time_instock=" . $product->lead_time_instock . "&keep_stock=" .$product->keep_stock . "&postage_set=" . $product->postage_set;
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL,"https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/editItem");
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded', $authorization));
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if($httpCode == 200){
+            ShopProduct::create(['shop_id' => $shop_id, 'product_id' => $product_id, 'item_code' => $copy_code, 'status' => 1]);
+            return response()->json(['status' => true]);
+        }
+
+        return response()->json(['status' => false, '']);
     }
 
     function generateRandomString($length = 10)
@@ -159,7 +246,7 @@ class ProductController extends Controller
         //ShopCategory::where('shop_id', $id)->update(['get_status' => 0, 'start' => 1]);
         $shop = Shop::with('app')->find($id);
         $app_id = $shop->app->id;
-        $access_token = YahooToken::find($app_id)->access_token;
+        $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
         $authorization = "Authorization: Bearer " . $access_token;
         $seller_id = Shop::find($id)->store_account;
         try {
@@ -171,6 +258,7 @@ class ProductController extends Controller
             curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
             $response = curl_exec($org_curl);
+            Log::info('Get Category Response:' . $response);
             $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
             $attr = $data['@attributes'];
             $total = (int)$attr['totalResultsAvailable'];

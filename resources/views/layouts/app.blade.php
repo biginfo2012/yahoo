@@ -18,6 +18,7 @@
         <link rel="stylesheet" type="text/css" href="{{asset('css/tables/datatable/responsive.bootstrap5.min.css')}}">
         <link rel="stylesheet" type="text/css" href="{{asset('css/tables/datatable/buttons.bootstrap5.min.css')}}">
         <link rel="stylesheet" type="text/css" href="{{asset('css/tables/datatable/rowGroup.bootstrap5.min.css')}}">
+        <link rel="stylesheet" type="text/css" href="{{asset('/')}}css/toastr.min.css">
         <!-- END: Vendor CSS-->
 
         <!-- BEGIN: Theme CSS-->
@@ -58,6 +59,7 @@
         <script src="{{asset('js/forms/validation/jquery.validate.min.js')}}"></script>
         <script src="{{asset('js/forms/cleave/cleave.min.js')}}"></script>
         <script src="{{asset('js/forms/cleave/addons/cleave-phone.us.js')}}"></script>
+        <script src="{{asset('/')}}js/toastr.min.js"></script>
         <!-- END: Page Vendor JS-->
 
         <!-- BEGIN: Theme JS-->

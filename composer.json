@@ -20,7 +20,8 @@
         "yahoojapan/yconnect-php-sdk": "dev-master2.2",
         "ext-curl": "*",
       "ext-simplexml": "*",
-        "ext-libxml": "*"
+        "ext-libxml": "*",
+      "ext-json": "*"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

@@ -42,14 +42,14 @@ class GetProductDetail extends Command
      */
     public function handle()
     {
-        $products = ShopProduct::whereNull('status')->orderBy('id', 'asc')->take(100)->get();
+        $products = ShopProduct::whereNull('status')->orderBy('id', 'asc')->take(25)->get();
         foreach ($products as $product){
             try {
                 $shop_id = $product->shop_id;
                 $shop = Shop::with('app')->find($shop_id);
                 $seller_id = $shop->store_account;
                 $app_id = $shop->app->id;
-                $access_token = YahooToken::find($app_id)->access_token;
+                $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
                 $authorization = "Authorization: Bearer " . $access_token;
                 $item_code = $product->item_code;
                 $org_curl = curl_init();
@@ -68,9 +68,6 @@ class GetProductDetail extends Command
                 if($total == 1) {
                     $item = (array)$result;
                     Log::info("item->name: " . $item['Name']);
-                    $release_date = empty($item['ReleaseDate']) ? null : date('Y-m-d', strtotime($item['ReleaseDate']));
-                    $sale_period_start= empty($item['SalePeriodStart']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodStart']));
-                    $sale_period_end= empty($item['SalePeriodEnd']) ? null : date('Y-m-d H:i:s', strtotime($item['SalePeriodEnd']));
                     $item_image_urls = $item['Image'];
                     $pathlist = (array)$item['PathList'];
                     $path = $pathlist['Path'];
@@ -87,49 +84,25 @@ class GetProductDetail extends Command
                         'product_category' => (int)$item['ProductCategory'],
                         'item_image_urls' => (string)$item_image_urls,
                         'caption' => (string)$item['Caption'],
-                        'abstract' => (string)$item['Abstract'],
-                        'original_price' => (int)$item['OriginalPrice'],
-                        'sale_price' => (int)$item['SalePrice'],
-                        'member_price' => (int)$item['MemberPrice'],
                         'headline' => (string)$item['Headline'],
                         'explanation' => (string)$item['Explanation'],
-                        'additional1' => (string)$item['Additional1'],
-                        'additional2' => (string)$item['Additional2'],
-                        'additional3' => (string)$item['Additional3'],
-                        'sp_additional' => (string)$item['SpAdditional'],
-                        'cart_related_items' => (string)$item['CartRelatedItems'],
-                        'ship_weight' => (int)$item['ShipWeight'],
                         'taxable' => (int)$item['Taxable'],
                         'taxrate_type' => (float)$item['TaxrateType'],
-                        'release_date' => $release_date,
-                        'sale_period_start' => $sale_period_start,
-                        'sale_period_end' => $sale_period_end,
                         'sale_limit' => (int)$item['SaleLimit'],
-                        'sp_code' => (int)$item['SpCode'],
-                        'point_code' => (string)$item['PointCode'],
-                        'meta_desc' => (string)$item['MetaDesc'],
                         'display' => (int)$item['Display'],
-                        'brand_code' => (int)$item['BrandCode'],
-                        'product_code' => (string)$item['ProductCode'],
-                        'jan' => (int)$item['Jan'],
                         'delivery' => (int)$item['Delivery'],
                         'condition' => (int)$item['Condition'],
-                        'original_price_evidence' => (string)$item['OriginalPriceEvidence'],
                         'lead_time_instock' => (int)$item['LeadTimeInStock'],
-                        'lead_time_outstock' => (int)$item['LeadTimeOutStock'],
                         'keep_stock' => (int)$item['KeepStock'],
-                        'postage_set' => (int)$item['PostageSet'],
-                        'is_drug' => (int)$item['IsDrug'],
-                        'item_tag'=>(string)$item['ItemTag']
+                        'postage_set' => (int)$item['PostageSet']
                     ];
-
                     Product::where('id', $product->product_id)->delete();
                     $id = Product::create($data)->id;
                     ShopProduct::where('id', $product->id)->update(['status' => 1, 'product_id' => $id]);
                 }
             }
             catch (\ErrorException $e){
-               Log::error('Get Product Detail Error');
+               Log::error("Get Product Detail Error: " . $e);
             }
         }
         return 0;
