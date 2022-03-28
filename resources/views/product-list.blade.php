@@ -13,7 +13,7 @@
     @foreach($data as $item)
         <tr>
             <td class="sorting_disabled dt-checkboxes-cell dt-checkboxes-select-all" rowspan="1" colspan="1" style="width: 15px;" data-col="1" aria-label="">
-                <div class="form-check"> <input class="form-check-input" type="checkbox" value="">
+                <div class="form-check"> <input class="form-check-input check-item" data-id="{{$item->id}}" type="checkbox" value="">
                     <label class="form-check-label" for="checkboxSelectAll"></label>
                 </div>
             </td>
@@ -54,7 +54,7 @@
             <button type="button" {{$page == 1 ? 'disabled' : ''}} class="btn-prev" data-page="{{$page}}"><span>前へ</span></button>
             <ul class="el-pager">
                 @if($page_count > 9 && $page> 5)
-                    <li class="el-icon more btn-quicknext el-icon-more"></li>
+                    <li class="el-icon more btn-quicknext el-icon-more">...</li>
                     <li class="number d-none">{{$total}}</li>
                 @endif
 
@@ -62,7 +62,7 @@
                     <li class="number {{$i == $page ? 'active' : ''}}">{{$i}}</li>
                 @endfor
                 @if($page_count > 9 && $page < $page_count - 4)
-                    <li class="el-icon more btn-quicknext el-icon-more"></li>
+                    <li class="el-icon more btn-quicknext el-icon-more">...</li>
                     <li class="number d-none">{{$total}}</li>
                 @endif
             </ul>

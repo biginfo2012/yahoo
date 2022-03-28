@@ -34,6 +34,7 @@
         <link rel="stylesheet" type="text/css" href="{{asset('css/vertical-menu.min.css')}}">
         <link rel="stylesheet" type="text/css" href="{{asset('css/forms/form-validation.css')}}">
         <link rel="stylesheet" type="text/css" href="{{asset('css/authentication.css')}}">
+        <link rel="stylesheet" type="text/css" href="{{asset('/')}}css/ext-component-toastr.css">
         <!-- END: Page CSS-->
 
         <!-- BEGIN: Custom CSS-->

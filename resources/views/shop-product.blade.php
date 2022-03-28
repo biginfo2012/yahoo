@@ -37,7 +37,8 @@
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             @foreach($stores as $shop)
-                                                <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                                                <a href="javascript:;" class="dropdown-item copy-all"
+                                                   data-id="{{$shop->id}}">{{$shop->store_name}}</a>
                                             @endforeach
                                         </div>
                                     </div>
@@ -58,11 +59,14 @@
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             @foreach($stores as $shop)
-                                                <a href="javascript:;" class="dropdown-item" data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                                                <a href="javascript:;" class="dropdown-item select-copy"
+                                                   data-shop="{{$shop->id}}">{{$shop->store_name}}</a>
                                             @endforeach
                                         </div>
                                     </div>
-                                    <a href="{{route('yahoo-search-product', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品取得</span></a>
+                                    <button data-id="{{$store_id}}" class="dt-button add-new btn btn-primary search-product">
+                                        <span>商品取得</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -83,7 +87,9 @@
         <!-- users list ends -->
     </div>
     <script>
+        let product_id = [];
         let product_copy = '{{route('product-copy')}}';
+        let search_product = '{{route('yahoo-search-product')}}'
         $(document).ready(function () {
             $('.menu_item').each(function () {
                 if($(this).data('id') == $('#store_id').val()){
@@ -93,8 +99,49 @@
                     $(this).removeClass('active')
                 }
             });
+            $(document).on('click', '.select-copy', function () {
+                if(product_id.length > 0){
+                    let shop_id = $(this).data('shop');
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': token
+                        }
+                    });
+                    $.ajax({
+                        url: product_copy,
+                        type:'post',
+                        data: {
+                            id : product_id,
+                            shop_id : shop_id
+                        },
+                        responseType: "json",
+                        success: function (response) {
+                            console.log(response);
+                            if(response.status == true){
+                                toastr.success(response.success + "個の製品の複製に成功しました。\n" +
+                                    response.copied + "個の製品を複製できませんでした。\n" +
+                                    "複製できない商品は複製先の店舗にすでに存在する商品です。");
+                            }
+                            else{
+                                toastr.warning("エラーが発生しました。");
+                            }
+                        },
+                        error: function () {
+
+                        }
+                    }).done(function( response ) {
+                        console.log(response);
+                    });
+                }
+                else{
+                    toastr.warning("商品を選択してください。");
+                }
+
+            })
             $(document).on('click', '.product-copy', function () {
                 let id = $(this).data('id');
+                let ids = [];
+                ids.push(id);
                 let shop_id = $(this).data('shop');
                 $.ajaxSetup({
                     headers: {
@@ -105,15 +152,47 @@
                     url: product_copy,
                     type:'post',
                     data: {
-                        id : id,
+                        id : ids,
                         shop_id : shop_id
+                    },
+                    dataType: "json",
+                    responseType: "json",
+                    success: function (response) {
+                        console.log(response);
+                        if(response.status == true){
+                            toastr.success(response.success + "個の製品の複製に成功しました。\n" +
+                                response.copied + "個の製品を複製できませんでした。\n" +
+                                "複製できない商品は複製先の店舗にすでに存在する商品です。");
+                        }
+                        else{
+                            toastr.warning("エラーが発生しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+            })
+            $(document).on('click', '.search-product', function () {
+                let id = $(this).data('id');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                $.ajax({
+                    url: search_product,
+                    type:'post',
+                    data: {
+                        shop_id : id,
                     },
                     success: function (response) {
                         console.log(response);
                         if(response.status == true){
-                            toastr.success("成功しました。");
+                            toastr.success("商品情報を取得しております。\n" +
+                                "ストア登録の商品が多い場合、お時間をいただくことがあります。");
                         }
-                        else {
+                        else{
                             toastr.warning("失敗しました。");
                         }
                     },
@@ -121,6 +200,16 @@
 
                     }
                 });
+            })
+            $(document).on('click', '.check-item', function () {
+                let id = $(this).data('id');
+                var index = product_id.indexOf(id);
+                if (index !== -1) {
+                    product_id.splice(index, 1);
+                }
+                else{
+                    product_id.push(id);
+                }
             })
         })
     </script>
@@ -194,6 +283,12 @@
                 processData: false,
                 success: function(response){
                     $('#product-list').html(response);
+                    $('.check-item').each(function () {
+                        let id =$(this).data('id');
+                        if(product_id.indexOf(id) !== -1){
+                            $(this).prop( "checked", true );
+                        }
+                    })
                 },
             });
 
