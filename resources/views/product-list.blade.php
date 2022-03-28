@@ -18,8 +18,8 @@
                 </div>
             </td>
             <td>{{$item->item_code}}</td>
-            <td>{{$item->product->name}}</td>
-            <td>{{$item->product->price}}</td>
+            <td>{{isset($item->product) ? $item->product->name : ''}}</td>
+            <td>{{isset($item->product) ?$item->product->price : ''}}</td>
             <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
             <td>
                 <div class="d-inline-flex">

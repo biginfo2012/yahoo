@@ -28,7 +28,9 @@
                         <tr>
                             <th>ストア名</th>
                             <th>ストアアカウント</th>
+                            <th>先頭</th>
                             <th>登録日</th>
+                            <th>アプリケーション</th>
                             <th></th>
                         </tr>
                         </thead>
@@ -37,6 +39,8 @@
                             <tr>
                                 <td>{{$item->store_name}}</td>
                                 <td>{{$item->store_account}}</td>
+                                <td>{{$item->prefix}}</td>
+                                <td>{{$item->app->app_name}}</td>
                                 <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
                                 <td>
                                     <a class="item-delete" data-id="{{$item->id}}">

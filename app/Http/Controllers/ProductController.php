@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\ProductCopy;
 use App\Models\Shop;
 use App\Models\ShopCategory;
 use App\Models\ShopProduct;
@@ -12,6 +13,7 @@ use App\Models\YahooToken;
 use ErrorException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
 use YConnect\Credential\ClientCredential;
 use YConnect\YConnectClient;
 use YConnect\Constant\OIDConnectDisplay;
@@ -81,43 +83,6 @@ class ProductController extends Controller
                 $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
                 $authorization = "Authorization: Bearer " . $access_token;
 
-//            $postData = [
-//                "seller_id" => $seller_id,
-//                "item_code" => $copy_code,
-//                "path" => $product->path,
-//                "name" => $product->name,
-//                "price" => $product->price,
-//                "product_category" => $product->product_category,
-//                "headline" => $product->headline,
-//                "item_image_urls" => $product->item_image_urls,
-//                "caption" => $product->caption,
-//                "explanation" => $product->explanation,
-//                "taxable" => $product->taxable,
-//                "taxrate_type" => $product->taxrate_type,
-//                "display" => $product->display,
-//                "delivery" => $product->delivery,
-//                "lead_time_instock" => $product->lead_time_instock,
-//                "keep_stock" => $product->keep_stock,
-//                "postage_set" => $product->postage_set,
-//            ];
-                //$org_curl = curl_init();
-                //$url = "https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/editItem";
-//        curl_setopt($org_curl, CURLOPT_POST, 1);
-//        curl_setopt($org_curl, CURLOPT_HTTPHEADER, array('Content-Type: application/json', $authorization));
-//        curl_setopt($org_curl, CURLOPT_POSTFIELDS, json_encode($postData));
-//        curl_setopt($org_curl, CURLOPT_URL, $url);
-//        curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
-//        curl_setopt_array($org_curl, array(
-//            CURLOPT_URL => $url,
-//            CURLOPT_HTTPHEADER => array('Content-Type: application/json' , $authorization),
-//            CURLOPT_RETURNTRANSFER => true,
-//            CURLOPT_ENCODING => "",
-//            CURLOPT_TIMEOUT => 30000,
-//            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-//            CURLOPT_CUSTOMREQUEST => "POST",
-//            CURLOPT_POSTFIELDS => json_encode($postData),
-//        ));
-
                 try {
                     $url = "seller_id=" . $seller_id . "&path=" . $product->path . "&item_code=" . $copy_code
                         . "&name=" . $product->name . "&price=" . $product->price . "&product_category=" . $product->product_category . "&headline=" . $product->headline
@@ -130,6 +95,7 @@ class ProductController extends Controller
                     curl_setopt($ch, CURLOPT_POST, 1);
                     curl_setopt($ch, CURLOPT_POSTFIELDS, $url);
                     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded', $authorization));
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                     curl_exec($ch);
                     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                     curl_close($ch);
@@ -148,12 +114,15 @@ class ProductController extends Controller
                 }
             }
         }
-        return response()->json(['status' => true, 'copied' => $copied, 'success' => $success]);
+        $return = ['status' => true, 'copied' => $copied, 'success' => $success];
+        return Response::json($return);
     }
 
     public function copyAll(Request $request){
         $current_id = $request->current_id;
         $shop_id = $request->shop_id;
+        ProductCopy::updateOrCreate(['copy_id' => $current_id, 'shop_id' => $shop_id], ['copy_id' => $current_id, 'shop_id' => $shop_id, 'status' => 0, 'start' => 1]);
+        return response()->json(['status' => true]);
     }
 
     function generateRandomString($length = 10)

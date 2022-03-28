@@ -25,7 +25,7 @@ class ShopController extends Controller
     }
 
     public function storeManage(){
-        $data = Shop::all();
+        $data = Shop::with('app')->get()->all();
         $stores = $data;
         $apps = YahooApp::all();
         return view('shop-manage', compact('data', 'stores', 'apps'));

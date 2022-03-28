@@ -37,8 +37,8 @@
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             @foreach($stores as $shop)
-                                                <a href="javascript:;" class="dropdown-item copy-all"
-                                                   data-id="{{$shop->id}}">{{$shop->store_name}}</a>
+                                                <a href="javascript:;" class="dropdown-item copy-all" data-id="{{$store_id}}"
+                                                   data-shop="{{$shop->id}}">{{$shop->store_name}}</a>
                                             @endforeach
                                         </div>
                                     </div>
@@ -89,6 +89,7 @@
     <script>
         let product_id = [];
         let product_copy = '{{route('product-copy')}}';
+        let copy_all = '{{route('copy-all')}}';
         let search_product = '{{route('yahoo-search-product')}}'
         $(document).ready(function () {
             $('.menu_item').each(function () {
@@ -99,6 +100,38 @@
                     $(this).removeClass('active')
                 }
             });
+            $(document).on('click', '.copy-all', function () {
+                let id = $(this).data('id');
+                let shop_id = $(this).data('shop');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                $.ajax({
+                    url: copy_all,
+                    type:'post',
+                    data: {
+                        current_id : id,
+                        shop_id : shop_id
+                    },
+                    dataType: "json",
+                    responseType: "json",
+                    success: function (response) {
+                        console.log(response);
+                        if(response.status == true){
+                            toastr.success("一括複製を進めます。\n" +
+                                "商品が多いので長い時間を要します。");
+                        }
+                        else{
+                            toastr.warning("エラーが発生しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+            })
             $(document).on('click', '.select-copy', function () {
                 if(product_id.length > 0){
                     let shop_id = $(this).data('shop');
