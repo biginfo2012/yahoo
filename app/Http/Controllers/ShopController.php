@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ProductCopy;
 use App\Models\Shop;
 use App\Models\YahooApp;
 use Illuminate\Http\Request;
@@ -32,7 +33,12 @@ class ShopController extends Controller
     }
 
     public function storeAdd(Request $request){
-        Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app, 'prefix' => $request->prefix]);
+        if(isset($request->shop_id)){
+            Shop::where('id', $request->shop_id)->update(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app, 'prefix' => $request->prefix]);
+        }
+        else{
+            Shop::create(['store_name' => $request->store_name, 'store_account' => $request->store_account, 'app_id' => $request->app, 'prefix' => $request->prefix]);
+        }
         return response()->json(['status' => true]);
     }
 

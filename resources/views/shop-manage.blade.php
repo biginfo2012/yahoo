@@ -29,8 +29,8 @@
                             <th>ストア名</th>
                             <th>ストアアカウント</th>
                             <th>先頭</th>
-                            <th>登録日</th>
                             <th>アプリケーション</th>
+                            <th>登録日</th>
                             <th></th>
                         </tr>
                         </thead>
@@ -43,6 +43,13 @@
                                 <td>{{$item->app->app_name}}</td>
                                 <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
                                 <td>
+                                    <a data-id="{{$item->id}}" class="item-edit">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit font-small-4">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                        </svg>
+                                    </a>
                                     <a class="item-delete" data-id="{{$item->id}}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2 font-small-4 me-50">
@@ -82,7 +89,7 @@
                                 </div>
                                 <div class="mb-1">
                                     <label class="form-label" for="role">アプリケーション</label>
-                                    <select class="form-select" id="app" name="app">
+                                    <select class="form-select" name="app">
                                         @foreach($apps as $app)
                                             <option value="{{$app->id}}">{{$app->app_name}}</option>
                                         @endforeach
@@ -97,6 +104,50 @@
                     </div>
                 </div>
                 <!-- Modal to add new user Ends-->
+
+                <div class="modal fade text-start" id="modifyForm" tabindex="-1" aria-labelledby="myModalLabel33"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myModalLabel33">ストア変更</h4>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="modify_form">
+                                @csrf
+                                <input type="hidden" id="shop_id" name="shop_id">
+                                <div class="modal-body">
+                                    <label>ストア名: </label>
+                                    <div class="mb-1">
+                                        <input type="text" class="form-control" placeholder="ストア名" name="store_name" id="store_name" required/>
+                                    </div>
+
+                                    <label>ストアアカウント: </label>
+                                    <div class="mb-1">
+                                        <input type="text" class="form-control" placeholder="ストアアカウント" name="store_account" id="store_account" required/>
+                                    </div>
+
+                                    <label>先頭: </label>
+                                    <div class="mb-1">
+                                        <input type="text" class="form-control" placeholder="先頭" name="prefix" id="prefix" required/>
+                                    </div>
+
+                                    <label>アプリケーション: </label>
+                                    <div class="mb-1">
+                                        <select class="form-select" id="app" name="app">
+                                            @foreach($apps as $app)
+                                                <option value="{{$app->id}}">{{$app->app_name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary modifyBtn">ストア変更</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
             <!-- list and filter end -->
         </section>
@@ -118,6 +169,35 @@
                         processData: false,
                         success: function(response){
                             $('#modals-slide-in').modal('hide');
+                            window.location.reload();
+                        },
+                    });
+                }
+            })
+            $('.item-edit').click(function (e) {
+                $('#shop_id').val($(this).data('id'));
+                $('#store_name').val($(this).parent().prev().prev().prev().prev().prev().text());
+                $('#store_account').val($(this).parent().prev().prev().prev().prev().text());
+                $('#prefix').val($(this).parent().prev().prev().prev().text());
+                let app_name = $(this).parent().prev().prev().text();
+                $("#app select option").filter(function() {
+                    //may want to use $.trim in here
+                    return $(this).text() == app_name;
+                }).prop('selected', true);
+                $('#modifyForm').modal('show');
+            })
+            $('.modifyBtn').click(function (e) {
+                if($('#modify_form').valid()){
+                    var paramObj = new FormData($('#modify_form')[0]);
+                    $.ajax({
+                        url: store_add,
+                        type: 'post',
+                        data: paramObj,
+                        contentType: false,
+                        processData: false,
+                        success: function(response){
+                            $('#modals-slide-in').modal('hide');
+                            $('#modifyForm').modal('hide');
                             window.location.reload();
                         },
                     });

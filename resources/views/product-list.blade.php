@@ -1,7 +1,11 @@
 <table class="product-list-table table">
     <thead class="table-light">
     <tr>
-        <th class="px-2" style="padding-top: 18px">選択</th>
+        <th class="px-2" style="padding-top: 18px; padding-left: 28px !important;">
+            <div class="form-check"> <input class="form-check-input check-all" type="checkbox" value="">
+                <label class="form-check-label" for="checkboxSelectAll"></label>
+            </div>
+        </th>
         <th style="padding-top: 18px">商品コード</th>
         <th style="padding-top: 18px">商品名</th>
         <th style="padding-top: 18px">価格</th>

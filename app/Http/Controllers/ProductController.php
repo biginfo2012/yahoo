@@ -34,7 +34,8 @@ class ProductController extends Controller
         $nonce = substr(str_shuffle('1234567890abcdefghijklmnopqrstuvwxyz'), 0, 10);
         $this->yahooGetCategory($id);
         $stores = Shop::where('id', '!=', $store_id)->get();
-        return view('shop-product', compact('store_id', 'state', 'nonce', 'stores'));
+        $copy = ProductCopy::where('copy_id', $id)->get();
+        return view('shop-product', compact('store_id', 'state', 'nonce', 'stores', 'copy'));
     }
 
     public function productList(Request $request)

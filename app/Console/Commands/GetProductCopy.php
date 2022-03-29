@@ -91,7 +91,8 @@ class GetProductCopy extends Command
                         curl_setopt($ch, CURLOPT_POSTFIELDS, $url);
                         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded', $authorization));
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                        curl_exec($ch);
+                        $res = curl_exec($ch);
+                        Log::info("Copy Item Res: " . $res);
                         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                         curl_close($ch);
 

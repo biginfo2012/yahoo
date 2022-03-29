@@ -38,7 +38,17 @@
                                         <div class="dropdown-menu dropdown-menu-end">
                                             @foreach($stores as $shop)
                                                 <a href="javascript:;" class="dropdown-item copy-all" data-id="{{$store_id}}"
-                                                   data-shop="{{$shop->id}}">{{$shop->store_name}}</a>
+                                                   data-shop="{{$shop->id}}">{{$shop->store_name}}
+                                                    @if(isset($copy))
+                                                        @foreach($copy as $item)
+                                                            @if($item->shop_id == $shop->id)
+                                                                @if($item->status == 0)
+                                                                    <br>(複製中 {{$item->start*10}}アイテム複製)
+                                                                @endif
+                                                            @endif
+                                                        @endforeach
+                                                    @endif
+                                                </a>
                                             @endforeach
                                         </div>
                                     </div>
@@ -244,6 +254,23 @@
                     product_id.push(id);
                 }
             })
+            $(document).on('click', '.check-all', function () {
+                $t = $(this);
+                product_id = [];
+                if($t.is(':checked')){
+                    $('.check-item').each(function () {
+                        let id = $(this).data('id');
+                        product_id.push(id);
+                        $(this).prop( "checked", true );
+                    })
+                }
+                else{
+                    $('.check-item').each(function () {
+                        $(this).prop( "checked", false );
+                    })
+                }
+                console.log(product_id);
+            })
         })
     </script>
     <link href="{{asset('')}}css/app.c3330493.css" rel="stylesheet">
@@ -316,12 +343,7 @@
                 processData: false,
                 success: function(response){
                     $('#product-list').html(response);
-                    $('.check-item').each(function () {
-                        let id =$(this).data('id');
-                        if(product_id.indexOf(id) !== -1){
-                            $(this).prop( "checked", true );
-                        }
-                    })
+                    product_id = [];
                 },
             });
 
