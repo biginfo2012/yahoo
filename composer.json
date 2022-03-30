@@ -21,7 +21,8 @@
         "ext-curl": "*",
       "ext-simplexml": "*",
         "ext-libxml": "*",
-      "ext-json": "*"
+      "ext-json": "*",
+      "ext-fileinfo": "*"
     },
     "require-dev": {
         "facade/ignition": "^2.5",

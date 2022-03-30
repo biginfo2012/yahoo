@@ -43,7 +43,7 @@
                                 <td>{{$item->app->app_name}}</td>
                                 <td>{{date('Y-m-d', strtotime($item->created_at))}}</td>
                                 <td>
-                                    <a data-id="{{$item->id}}" class="item-edit">
+                                    <a data-id="{{$item->id}}" class="item-edit" data-app="{{$item->app->id}}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit font-small-4">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -176,11 +176,13 @@
             })
             $('.item-edit').click(function (e) {
                 $('#shop_id').val($(this).data('id'));
+                let app_id = $(this).data("app");
+                $("#app select").val(app_id);
                 $('#store_name').val($(this).parent().prev().prev().prev().prev().prev().text());
                 $('#store_account').val($(this).parent().prev().prev().prev().prev().text());
                 $('#prefix').val($(this).parent().prev().prev().prev().text());
                 let app_name = $(this).parent().prev().prev().text();
-                $("#app select option").filter(function() {
+                $("select#app option").filter(function() {
                     //may want to use $.trim in here
                     return $(this).text() == app_name;
                 }).prop('selected', true);

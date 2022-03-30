@@ -10,10 +10,12 @@ use App\Models\ShopProduct;
 use App\Models\YahooApp;
 use App\Models\YahooCategory;
 use App\Models\YahooToken;
+use CURLFile;
 use ErrorException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
 use YConnect\Credential\ClientCredential;
 use YConnect\YConnectClient;
 use YConnect\Constant\OIDConnectDisplay;
@@ -62,6 +64,7 @@ class ProductController extends Controller
             $item_code = $shop_product->item_code;
             $product_id = $shop_product->product_id;
             $codes = explode('-', $item_code);
+            $shop_id = $request->shop_id;
             if(count($codes) == 2){
                 $code = $codes[1];
             }
@@ -71,13 +74,12 @@ class ProductController extends Controller
             $prefix = Shop::find($request->shop_id)->prefix;
             $copy_code = $prefix . '-' . $code;
             $is_ex = ShopProduct::where('item_code', $copy_code)->first();
-
             if(isset($is_ex)){
                 $copied++;
+                $this->yahooUploadImage($copy_code, $shop_id);
             }
             else{
                 $product = Product::find($product_id);
-                $shop_id = $request->shop_id;
                 $shop = Shop::with('app')->find($shop_id);
                 $seller_id = $shop->store_account;
                 $app_id = $shop->app->id;
@@ -103,6 +105,7 @@ class ProductController extends Controller
 
                     if($httpCode == 200){
                         ShopProduct::create(['shop_id' => $shop_id, 'product_id' => $product_id, 'item_code' => $copy_code, 'status' => 1]);
+                        $this->yahooUploadImage($copy_code, $shop_id);
                         $success++;
                     }
                     else{
@@ -117,6 +120,57 @@ class ProductController extends Controller
         }
         $return = ['status' => true, 'copied' => $copied, 'success' => $success];
         return Response::json($return);
+    }
+
+    public function yahooUploadImage($copy_code, $shop_id){
+        $shop = Shop::with('app')->find($shop_id);
+        $app_id = $shop->app->id;
+        $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
+        $seller_id = $shop->store_account;
+
+        $shop_product = ShopProduct::where('item_code', $copy_code)->get()->first();
+        $product = Product::find($shop_product->product_id);
+        $images = explode(';', $product->item_image_urls);
+
+        foreach ($images as $index => $image){
+
+            $names = explode('/', $image);
+            $origin_name = $names[count($names)-1] . ".jpg";
+            $contents = file_get_contents(str_replace('/b/', '/n/', $image));
+            Storage::disk('local')->put($origin_name, $contents);
+            $path = storage_path('app') . '/' . $origin_name;
+            $mime = mime_content_type($path);
+            $header = [
+                'Content-Type: multipart/form-data',
+                'POST /ShoppingWebService/V1/uploadItemImage?seller_id=' . $seller_id .' HTTP/1.1',
+                'Host: circus.shopping.yahooapis.jp',
+                'Authorization: Bearer ' . $access_token,
+            ];
+            if($index == 0){
+                $file_name = $copy_code . ".jpg";
+            }
+            else{
+                $file_name = $copy_code . "_" . $index . ".jpg";
+            }
+
+            $url   = 'https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/uploadItemImage?seller_id=' .$seller_id;
+            $param = array('file' => new CURLFile($path, $mime, $file_name));
+
+            // 必要に応じてオプションを追加してください。
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST,  'POST');
+            curl_setopt($ch, CURLOPT_HTTPHEADER,     $header);
+            curl_setopt($ch, CURLOPT_URL,            $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST,           true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS,     $param);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            Log::info('Item Image Upload httpCode: ' . $httpCode);
+            sleep(1);
+        }
     }
 
     public function copyAll(Request $request){

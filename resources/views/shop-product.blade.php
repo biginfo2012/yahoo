@@ -18,7 +18,7 @@
 {{--                                    <span class="yconnectLogin position-absolute" style="left: -155px;"></span>--}}
 {{--                                    <a href="{{route('yahoo-auth-code', $store_id)}}" class="dt-button add-new btn btn-primary"><span>AuthCode取得</span></a>--}}
 {{--                                    <a href="{{route('yahoo-refresh')}}" class="dt-button add-new btn btn-primary"><span>Refresh取得</span></a>--}}
-{{--                                    <a href="{{route('yahoo-get-category', $store_id)}}" class="dt-button add-new btn btn-primary"><span>カテゴリ取得</span></a>--}}
+{{--                                    <a href="{{route('yahoo-upload-image', $store_id)}}" class="dt-button add-new btn btn-primary"><span>イメージ</span></a>--}}
 {{--                                    <a href="{{route('yahoo-product-item', $store_id)}}" class="dt-button add-new btn btn-primary"><span>商品詳細</span></a>--}}
                                     <div class="d-inline-flex">
                                         <a class="pe-1 dropdown-toggle hide-arrow text-primary" data-bs-toggle="dropdown">
@@ -43,7 +43,7 @@
                                                         @foreach($copy as $item)
                                                             @if($item->shop_id == $shop->id)
                                                                 @if($item->status == 0)
-                                                                    <br>(複製中 {{$item->start*10}}アイテム複製)
+                                                                    <br>(複製中)
                                                                 @endif
                                                             @endif
                                                         @endforeach

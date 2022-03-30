@@ -78,18 +78,15 @@ class GetProduct extends Command
                         curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
                         $response = curl_exec($org_curl);
-                        Log::info("Get Product Response: " . $response);
                         $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
                         $attr = $data['@attributes'];
                         $total = (int)$attr['totalResultsAvailable'];
                         $total_return = (int)$attr['totalResultsReturned'];
                         $result = $data['Result'];
                         if($total_return > 0){
-                            Log::info("category_code: " . $pagekey);
                             if($total_return != 1) {
                                 foreach ($result as $item){
                                     $item = (array)$item;
-                                    Log::info("item->name: " . $item['Name']);
                                     ShopProduct::updateOrCreate(['shop_id' => $shop_id, 'item_code' => $item['ItemCode']], [
                                         'shop_id' => $shop_id,
                                         'item_code' => $item['ItemCode'],
@@ -98,7 +95,6 @@ class GetProduct extends Command
                             }
                             else{
                                 $item = (array)$result;
-                                Log::info("item->name: " . $item['Name']);
                                 ShopProduct::updateOrCreate(['shop_id' => $shop_id, 'item_code' => $item['ItemCode']], [
                                     'shop_id' => $shop_id,
                                     'item_code' => $item['ItemCode'],
@@ -113,7 +109,7 @@ class GetProduct extends Command
                         }
                     }
                     catch (ErrorException $e){
-                        Log::error('Get Product Error');
+                        Log::error('Get Product Error' . $e);
                     }
                 }
             }

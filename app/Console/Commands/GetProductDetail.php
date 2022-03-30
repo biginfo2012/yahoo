@@ -60,7 +60,6 @@ class GetProductDetail extends Command
                 curl_setopt($org_curl, CURLOPT_RETURNTRANSFER, true);
 
                 $response = curl_exec($org_curl);
-                Log::info("Get Product Detail Response: " . $response);
                 $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
                 $attr = $data['@attributes'];
                 $total = (int)$attr['totalResultsReturned'];

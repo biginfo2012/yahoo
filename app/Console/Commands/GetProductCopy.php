@@ -7,9 +7,11 @@ use App\Models\ProductCopy;
 use App\Models\Shop;
 use App\Models\ShopProduct;
 use App\Models\YahooToken;
+use CURLFile;
 use ErrorException;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class GetProductCopy extends Command
 {
@@ -51,7 +53,8 @@ class GetProductCopy extends Command
             $start = $item->start;
             $copied = 0;
             $success = 0;
-            $ids = ShopProduct::where('shop_id', $copy_id)->orderBy('id', 'asc')->offset(($start - 1) * 10)->limit(10)->get();
+            $error = 0;
+            $ids = ShopProduct::where('shop_id', $copy_id)->orderBy('id', 'desc')->offset(($start - 1) * 3)->limit(3)->get();
             foreach ($ids as $id) {
                 $shop_product = ShopProduct::find($id->id);
                 $item_code = $shop_product->item_code;
@@ -69,6 +72,7 @@ class GetProductCopy extends Command
                 Log::info('Get Product Copy copy_code '.$copy_code);
                 if(isset($is_ex)){
                     $copied++;
+                    $this->yahooUploadImage($copy_code, $shop_id);
                 }
                 else{
                     $product = Product::find($product_id);
@@ -92,27 +96,29 @@ class GetProductCopy extends Command
                         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded', $authorization));
                         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                         $res = curl_exec($ch);
-                        Log::info("Copy Item Res: " . $res);
                         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                         curl_close($ch);
 
                         if($httpCode == 200){
                             ShopProduct::create(['shop_id' => $shop_id, 'product_id' => $product_id, 'item_code' => $copy_code, 'status' => 1]);
+                            $this->yahooUploadImage($copy_code, $shop_id);
                             $success++;
                         }
                         else{
-                            $copied++;
+                            $error++;
+                            Log::info("Copy Item Res: " . $res);
                         }
                     }
                     catch (ErrorException $e){
                         Log::error("Copy Item Error: " . $e);
-                        $copied++;
+                        $error++;
                     }
                 }
             }
-            $count = ShopProduct::where('shop_id', $copy_id)->pluck('id')->count();
-            Log::info('Get Product Copy count '.$count);
-            if($count < $start * 10){
+
+            //$count = ShopProduct::where('shop_id', $copy_id)->pluck('id')->count();
+            //Log::info('Get Product Copy count '.$count);
+            if(count($ids) == 0){
                 $start = $start + 1;
                 ProductCopy::where('id', $item->id)->update(['start' => $start, 'status' => 1]);
             }
@@ -120,8 +126,61 @@ class GetProductCopy extends Command
                 $start = $start + 1;
                 ProductCopy::where('id', $item->id)->update(['start' => $start]);
             }
-            Log::info('Product Copy: copied: ' . $copied . ' success : ' .$success);
+            Log::info('Product Copy: copied: ' . $copied . ' success : ' .$success . ' error : ' . $error);
         }
         return 0;
+    }
+
+    public function yahooUploadImage($copy_code, $shop_id){
+        $shop = Shop::with('app')->find($shop_id);
+        $app_id = $shop->app->id;
+        $access_token = YahooToken::where('app_id', $app_id)->first()->access_token;
+        $seller_id = $shop->store_account;
+
+        $shop_product = ShopProduct::where('item_code', $copy_code)->get()->first();
+        $product = Product::find($shop_product->product_id);
+        $images = explode(';', $product->item_image_urls);
+
+        foreach ($images as $index => $image){
+
+            $names = explode('/', $image);
+            $origin_name = $names[count($names)-1] . ".jpg";
+            $contents = file_get_contents(str_replace('/b/', '/n/', $image));
+            Storage::disk('local')->put($origin_name, $contents);
+            $path = storage_path('app') . '/' . $origin_name;
+            $mime = mime_content_type($path);
+            $header = [
+                'Content-Type: multipart/form-data',
+                'POST /ShoppingWebService/V1/uploadItemImage?seller_id=' . $seller_id .' HTTP/1.1',
+                'Host: circus.shopping.yahooapis.jp',
+                'Authorization: Bearer ' . $access_token,
+            ];
+            if($index == 0){
+                $file_name = $copy_code . ".jpg";
+            }
+            else{
+                $file_name = $copy_code . "_" . $index . ".jpg";
+            }
+
+            $url   = 'https://circus.shopping.yahooapis.jp/ShoppingWebService/V1/uploadItemImage?seller_id=' .$seller_id;
+            $param = array('file' => new CURLFile($path, $mime, $file_name));
+
+            // 必要に応じてオプションを追加してください。
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST,  'POST');
+            curl_setopt($ch, CURLOPT_HTTPHEADER,     $header);
+            curl_setopt($ch, CURLOPT_URL,            $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST,           true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS,     $param);
+
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            if($httpCode != 200){
+                Log::info('Item Image Upload Error: ' . $response);
+            }
+            sleep(1);
+        }
     }
 }

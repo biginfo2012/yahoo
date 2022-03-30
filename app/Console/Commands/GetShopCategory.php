@@ -69,8 +69,6 @@ class GetShopCategory extends Command
                         if($total_return != 1) {
                             foreach ($result as $item){
                                 $item = (array)$item;
-                                //print_r($item['IsLeaf']);
-                                Log::info('Shop Category Name: ' . $item['Name']);
                                 ShopCategory::updateOrCreate(['shop_id' => $shop_id, 'pagekey' => (string)$item['PageKey']], [
                                     'shop_id' => $shop_id,
                                     'pagekey' => (string)$item['PageKey'],
@@ -82,7 +80,6 @@ class GetShopCategory extends Command
                         }
                         else{
                             $item = (array)$result;
-                            Log::info('Shop Category Name: ' . $item['Name']);
                             ShopCategory::updateOrCreate(['shop_id' => $shop_id, 'pagekey' => (string)$item['PageKey']], [
                                 'shop_id' => $shop_id,
                                 'pagekey' => (string)$item['PageKey'],
