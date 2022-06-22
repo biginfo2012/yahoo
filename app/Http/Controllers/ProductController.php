@@ -14,6 +14,7 @@ use CURLFile;
 use ErrorException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Storage;
 use YConnect\Credential\ClientCredential;
@@ -37,16 +38,42 @@ class ProductController extends Controller
         $this->yahooGetCategory($id);
         $stores = Shop::where('id', '!=', $store_id)->get();
         $copy = ProductCopy::where('copy_id', $id)->get();
+        foreach ($copy as $item){
+            $total = ShopProduct::where('shop_id', $item->copy_id)->count();
+            $percent = $total == 0 ? 0 : (int)(($item->start / $total) *100);
+            $item->start = $percent;
+        }
         return view('shop-product', compact('store_id', 'state', 'nonce', 'stores', 'copy'));
+    }
+
+    public function storeSearch(Request $request){
+
     }
 
     public function productList(Request $request)
     {
         $store_id = $request->store_id;
         $page = $request->page;
-        $data = ShopProduct::with('product')->where('shop_id', $store_id)->orderBy('updated_at', 'desc')
-            ->offset(($page - 1) * 50)->limit(50)->get();
-        $total = ShopProduct::where('shop_id', $store_id)->pluck('id')->count();
+        if(isset($request->product_code)){
+            $codes = explode(',', $request->product_code);
+            $data = ShopProduct::with('product')->where('shop_id', $store_id)->where(function($query) use($codes){
+                foreach($codes as $keyword) {
+                    $query->orWhere('item_code', 'LIKE', "%$keyword%");
+                }
+            })->orderBy('updated_at', 'desc')
+                ->offset(($page - 1) * 50)->limit(50)->get();
+            $total = ShopProduct::where('shop_id', $store_id)->where(function($query) use($codes){
+                foreach($codes as $keyword) {
+                    $query->orWhere('item_code', 'LIKE', "%$keyword%");
+                }
+            })->pluck('id')->count();
+        }
+        else{
+            $data = ShopProduct::with('product')->where('shop_id', $store_id)->orderBy('updated_at', 'desc')
+                ->offset(($page - 1) * 50)->limit(50)->get();
+            $total = ShopProduct::where('shop_id', $store_id)->pluck('id')->count();
+        }
+
         $page_count = (int)($total / 50);
         if ($total > $page_count * 50) {
             $page_count = $page_count + 1;
@@ -120,6 +147,11 @@ class ProductController extends Controller
         }
         $return = ['status' => true, 'copied' => $copied, 'success' => $success];
         return Response::json($return);
+    }
+
+    public function productDelete(Request $request){
+        ShopProduct::where('id', $request->id)->delete();
+        return response()->json(['status' => true]);
     }
 
     public function yahooUploadImage($copy_code, $shop_id){
@@ -387,7 +419,7 @@ class ProductController extends Controller
 
     public function yahooSearchProduct(Request $request){
         $shop_id = $request->shop_id;
-        ShopCategory::where('shop_id', $shop_id)->update(['status' => null, 'get_status' => 1]);
+        ShopCategory::where('shop_id', $shop_id)->update(['status' => null, 'get_status' => 1, 'start' => 1]);
         return response()->json(['status' => true]);
     }
 
@@ -547,5 +579,96 @@ class ProductController extends Controller
             }
         }
         return response()->json(['status' => true]);
+    }
+
+    private $rows = [];
+
+    public function csvDelete(Request $request)
+    {
+        $path = $request->file('file')->getRealPath();
+        $records = array_map('str_getcsv', file($path));
+        $store_id = $request->store_id;
+
+        if ((!count($records)) > 0) {
+            return 'Error...';
+        }
+
+        // Get field names from header column
+        $fields = array_map('strtolower', $records[0]);
+
+        // Remove the header column
+        array_shift($records);
+
+        foreach ($records as $record) {
+            if (count($fields) != count($record)) {
+                return 'csv_upload_invalid_data';
+            }
+
+            // Decode unwanted html entities
+            $record =  array_map("html_entity_decode", $record);
+
+            // Set the field name as key
+            $record = array_combine($fields, $record);
+
+            // Get the clean data
+            $this->rows[] = $this->clear_encoding_str($record);
+        }
+
+        foreach ($this->rows as $data) {
+            $code = $data['code'];
+            ShopProduct::where('item_code', $code)->where('shop_id', $store_id)->delete();
+        }
+
+        return redirect()->back();
+    }
+
+    public function csvDown(Request $request){
+        $shop_id = $request->shop_id;
+        $products = ShopProduct::where('shop_id', $shop_id)->get();
+
+        // these are the headers for the csv file. Not required but good to have one incase of system didn't recongize it properly
+        $headers = array(
+          'Content-Type' => 'text/csv'
+        );
+
+
+        //I am storing the csv file in public >> files folder. So that why I am creating files folder
+        if (!File::exists(public_path()."/files")) {
+            File::makeDirectory(public_path() . "/files");
+        }
+
+        //creating the download file
+        $filename =  public_path("files/download.csv");
+        $handle = fopen($filename, 'w');
+
+        //adding the first row
+        fputcsv($handle, [
+            "code",
+        ]);
+
+        //adding the data from the array
+        foreach ($products as $each_user) {
+            fputcsv($handle, [
+                $each_user->item_code
+            ]);
+
+        }
+        fclose($handle);
+
+        //download command
+        return Response::download($filename, "download.csv", $headers);
+
+    }
+
+    private function clear_encoding_str($value)
+    {
+        if (is_array($value)) {
+            $clean = [];
+            foreach ($value as $key => $val) {
+                $clean[$key] = mb_convert_encoding($val, 'UTF-8', 'UTF-8');
+            }
+            return $clean;
+        }
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

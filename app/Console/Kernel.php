@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         Commands\GetShopCategory::class,
         Commands\GetProductDetail::class,
         Commands\GetProductCopy::class,
+        Commands\ProductCopyCheck::class,
     ];
     /**
      * Define the application's command schedule.
@@ -30,7 +31,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('command:get-shop-category')->everyMinute();
         $schedule->command('command:get-product')->everyMinute();
         $schedule->command('command:get-product-detail')->everyMinute();
-        $schedule->command('command:get-product-copy')->everyMinute();
+        //$schedule->command('command:get-product-copy')->everyMinute();
+        $schedule->command('command:product-copy-check')->everyMinute();
     }
 
     /**

@@ -61,44 +61,51 @@ class GetProductDetail extends Command
 
                 $response = curl_exec($org_curl);
                 $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
-                $attr = $data['@attributes'];
-                $total = (int)$attr['totalResultsReturned'];
-                $result = $data['Result'];
+                if(array_key_exists('@attributes', $data)){
+                    $attr = $data['@attributes'];
+                    $total = (int)$attr['totalResultsReturned'];
+                    $result = $data['Result'];
 
-                if($total == 1) {
-                    $item = (array)$result;
-                    Log::info("item->name: " . $item['Name']);
-                    $item_image_urls = $item['Image'];
-                    $pathlist = (array)$item['PathList'];
-                    $path = $pathlist['Path'];
-                    for($i = 1; $i <= 20; $i++){
-                        $key = 'LibImage' . $i;
-                        if(!empty($item[$key])){
-                            $item_image_urls = $item_image_urls . ';' . $item[$key];
+                    if($total == 1) {
+                        $item = (array)$result;
+                        Log::info("item->name: " . $item['Name']);
+                        $item_image_urls = $item['Image'];
+                        $pathlist = (array)$item['PathList'];
+                        $path = $pathlist['Path'];
+                        for($i = 1; $i <= 20; $i++){
+                            $key = 'LibImage' . $i;
+                            if(!empty($item[$key])){
+                                $item_image_urls = $item_image_urls . ';' . $item[$key];
+                            }
                         }
+                        $data = [
+                            'name' => (string)$item['Name'],
+                            'price' => (int)$item['Price'],
+                            'path' => (string)$path,
+                            'product_category' => (int)$item['ProductCategory'],
+                            'item_image_urls' => (string)$item_image_urls,
+                            'caption' => (string)$item['Caption'],
+                            'headline' => (string)$item['Headline'],
+                            'explanation' => (string)$item['Explanation'],
+                            'taxable' => (int)$item['Taxable'],
+                            'taxrate_type' => (float)$item['TaxrateType'],
+                            'sale_limit' => (int)$item['SaleLimit'],
+                            'display' => (int)$item['Display'],
+                            'delivery' => (int)$item['Delivery'],
+                            'condition' => (int)$item['Condition'],
+                            'lead_time_instock' => (int)$item['LeadTimeInStock'],
+                            'keep_stock' => (int)$item['KeepStock'],
+                            'postage_set' => (int)$item['PostageSet']
+                        ];
+                        Product::where('id', $product->product_id)->delete();
+                        $id = Product::create($data)->id;
+                        ShopProduct::where('id', $product->id)->update(['status' => 1, 'product_id' => $id]);
                     }
-                    $data = [
-                        'name' => (string)$item['Name'],
-                        'price' => (int)$item['Price'],
-                        'path' => (string)$path,
-                        'product_category' => (int)$item['ProductCategory'],
-                        'item_image_urls' => (string)$item_image_urls,
-                        'caption' => (string)$item['Caption'],
-                        'headline' => (string)$item['Headline'],
-                        'explanation' => (string)$item['Explanation'],
-                        'taxable' => (int)$item['Taxable'],
-                        'taxrate_type' => (float)$item['TaxrateType'],
-                        'sale_limit' => (int)$item['SaleLimit'],
-                        'display' => (int)$item['Display'],
-                        'delivery' => (int)$item['Delivery'],
-                        'condition' => (int)$item['Condition'],
-                        'lead_time_instock' => (int)$item['LeadTimeInStock'],
-                        'keep_stock' => (int)$item['KeepStock'],
-                        'postage_set' => (int)$item['PostageSet']
-                    ];
+                }
+                else{
+                    Log::debug(json_encode($data['Code']));
+                    ShopProduct::where('id', $product->id)->delete();
                     Product::where('id', $product->product_id)->delete();
-                    $id = Product::create($data)->id;
-                    ShopProduct::where('id', $product->id)->update(['status' => 1, 'product_id' => $id]);
                 }
             }
             catch (\ErrorException $e){

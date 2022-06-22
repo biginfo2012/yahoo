@@ -43,7 +43,7 @@
                                                         @foreach($copy as $item)
                                                             @if($item->shop_id == $shop->id)
                                                                 @if($item->status == 0)
-                                                                    <br>(複製中)
+                                                                    <br>(複製中{{$item->start}}%)
                                                                 @endif
                                                             @endif
                                                         @endforeach
@@ -74,11 +74,42 @@
                                             @endforeach
                                         </div>
                                     </div>
+                                    <button data-id="{{$store_id}}" class="dt-button btn btn-primary down-product">
+                                        <span>CSVダウンロード</span>
+                                    </button>
                                     <button data-id="{{$store_id}}" class="dt-button add-new btn btn-primary search-product">
                                         <span>商品取得</span>
                                     </button>
                                 </div>
                             </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-7">
+                            <form class="needs-validation" novalidate>
+                                <div class="row g-1">
+                                    <div class="col-md-6 col-12 mb-1 position-relative">
+                                        <label class="form-label" for="validationTooltip01">商品コード</label>
+                                        <input type="text" class="form-control" id="product-code" placeholder="商品コード" required/>
+                                    </div>
+                                    <div class="col-md-6 col-12 mb-1 position-relative justify-content-lg-end">
+                                        <button class="btn btn-primary" type="submit" id="product-search" style="margin-top: 24px;">検索</button>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                        <div class="col-sm-12 col-lg-5">
+                            <form>
+                                <div class="row g-1">
+                                    <div class="col-md-6 col-12 mb-1 position-relative justify-content-lg-end">
+                                        <label class="form-label" for="validationTooltip01">商品コード</label>
+                                        <input type="hidden" name="csv_file"/>
+                                        <button class="dt-button buttons-collection btn btn-outline-secondary dropdown-toggle me-2"
+                                                    tabindex="0" aria-controls="DataTables_Table_0" type="button" aria-haspopup="true">
+                                                <span>CSV </span>
+                                            </button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -101,6 +132,9 @@
         let product_copy = '{{route('product-copy')}}';
         let copy_all = '{{route('copy-all')}}';
         let search_product = '{{route('yahoo-search-product')}}'
+        let product_delete = '{{route('product-delete')}}';
+        let csv_down = '{{route('csv-down')}}';
+
         $(document).ready(function () {
             $('.menu_item').each(function () {
                 if($(this).data('id') == $('#store_id').val()){
@@ -216,6 +250,33 @@
                     }
                 });
             })
+            $(document).on('click', '.down-product', function () {
+                let id = $(this).data('id');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                $.ajax({
+                    url: csv_down,
+                    type:'post',
+                    data: {
+                        shop_id : id,
+                    },
+                    success: function (response) {
+                        console.log(response);
+                        if(response.status == true){
+
+                        }
+                        else{
+                            toastr.warning("失敗しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+            })
             $(document).on('click', '.search-product', function () {
                 let id = $(this).data('id');
                 $.ajaxSetup({
@@ -271,6 +332,50 @@
                 }
                 console.log(product_id);
             })
+            $(document).on('click', '.item-delete', function () {
+                let id = $(this).data('id');
+                $.ajaxSetup({
+                    headers: {
+                        'X-CSRF-TOKEN': token
+                    }
+                });
+                $.ajax({
+                    url: product_delete,
+                    type:'post',
+                    data: {
+                        id : id
+                    },
+                    success: function (response) {
+                        toastr.options = {
+                            "closeButton": true,
+                            "debug": false,
+                            "newestOnTop": false,
+                            "progressBar": false,
+                            "positionClass": "toast-top-right",
+                            "preventDuplicates": false,
+                            "onclick": null,
+                            "showDuration": "300",
+                            "hideDuration": "1000",
+                            "timeOut": "5000",
+                            "extendedTimeOut": "1000",
+                            "showEasing": "swing",
+                            "hideEasing": "linear",
+                            "showMethod": "fadeIn",
+                            "hideMethod": "fadeOut"
+                        };
+                        if(response.status == true){
+                            toastr.success("成功しました。");
+                            window.location.reload()
+                        }
+                        else {
+                            toastr.warning("失敗しました。");
+                        }
+                    },
+                    error: function () {
+
+                    }
+                });
+            })
         })
     </script>
     <link href="{{asset('')}}css/app.c3330493.css" rel="stylesheet">
@@ -317,6 +422,12 @@
         $(document).ready(function () {
             getProduct()
         });
+        $(document).on('click', '#product-search', function (e) {
+            e.preventDefault();
+            if($('#product-code').val()){
+                getProduct();
+            }
+        })
         $(document).on('click', '.number', function () {
             $('#page').val($(this).text());
             getProduct()
@@ -335,6 +446,7 @@
             let sort = '';
             var paramObj = new FormData($('#search_form')[0]);
             paramObj.append('sort', sort);
+            paramObj.append('product_code', $('#product-code').val())
             $.ajax({
                 url: product_list,
                 type: 'post',

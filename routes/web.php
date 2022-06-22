@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('auth.login');
 });
+
+Route::get('yahoo-auth-code/{id}', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');
+Route::get('yahoo_callback', [ProductController::class, 'yahooCallback'])->name('yahoo_callback');
+Route::get('yahoo-refresh', [ProductController::class, 'yahooRefresh'])->name('yahoo-refresh');
+
 Route::group(['middleware' => 'auth'], function (){
     Route::get('dashboard', [ShopController::class, 'appManage'])->name('dashboard');
     Route::post('app-add', [ShopController::class, 'appAdd'])->name('app-add');
@@ -26,15 +31,17 @@ Route::group(['middleware' => 'auth'], function (){
     Route::post('store-add', [ShopController::class, 'storeAdd'])->name('store-add');
     Route::post('store-delete', [ShopController::class, 'storeDelete'])->name('store-delete');
     Route::get('store-product/{id}', [ProductController::class, 'storeProduct'])->name('store-product');
+    Route::post('store-product-search', [ProductController::class, 'searchProduct'])->name('store-product-search');
     Route::post('product-list', [ProductController::class, 'productList'])->name('product-list');
     Route::post('product-copy', [ProductController::class, 'productCopy'])->name('product-copy');
+    Route::post('product-delete', [ProductController::class, 'productDelete'])->name('product-delete');
     Route::post('copy-all', [ProductController::class, 'copyAll'])->name('copy-all');
-    Route::get('yahoo-auth-code/{id}', [ProductController::class, 'yahooAuthCode'])->name('yahoo-auth-code');
-    Route::get('yahoo_callback', [ProductController::class, 'yahooCallback'])->name('yahoo_callback');
-    Route::get('yahoo-refresh', [ProductController::class, 'yahooRefresh'])->name('yahoo-refresh');
+    Route::post('csv-delete', [ProductController::class, 'csvDelete'])->name('csv-delete');
+    Route::post('csv-down', [ProductController::class, 'csvDown'])->name('csv-down');
+
     Route::get('yahoo-get-category/{id}', [ProductController::class, 'yahooGetCategory'])->name('yahoo-get-category');
     Route::get('yahoo-upload-image/{id}', [ProductController::class, 'yahooUploadImage'])->name('yahoo-upload-image');
-    Route::get('yahoo-search-product', [ProductController::class, 'yahooSearchProduct'])->name('yahoo-search-product');
+    Route::post('yahoo-search-product', [ProductController::class, 'yahooSearchProduct'])->name('yahoo-search-product');
     Route::get('yahoo-product-item/{id}', [ProductController::class, 'yahooProductItem'])->name('yahoo-product-item');
     Route::get('yahoo-get-product-detail', [ProductController::class, 'yahooGetProductDetail'])->name('yahoo-get-product-detail');
 });

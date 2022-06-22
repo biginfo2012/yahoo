@@ -45,7 +45,6 @@ class GetProduct extends Command
      */
     public function handle()
     {
-
         $categorys = ShopCategory::where('get_status', '!=', 2)->orderBy('updated_at', 'desc')->take(5)->get();
         foreach ($categorys as $category){
             if(isset($category)){
@@ -79,34 +78,37 @@ class GetProduct extends Command
 
                         $response = curl_exec($org_curl);
                         $data = (array)simplexml_load_string($response, "SimpleXMLElement", LIBXML_NOCDATA);
-                        $attr = $data['@attributes'];
-                        $total = (int)$attr['totalResultsAvailable'];
-                        $total_return = (int)$attr['totalResultsReturned'];
-                        $result = $data['Result'];
-                        if($total_return > 0){
-                            if($total_return != 1) {
-                                foreach ($result as $item){
-                                    $item = (array)$item;
+                        if(array_key_exists('@attributes', $data)){
+                            $attr = $data['@attributes'];
+                            $total = (int)$attr['totalResultsAvailable'];
+                            $total_return = (int)$attr['totalResultsReturned'];
+                            $result = $data['Result'];
+                            if($total_return > 0){
+                                if($total_return != 1) {
+                                    foreach ($result as $item){
+                                        $item = (array)$item;
+                                        ShopProduct::updateOrCreate(['shop_id' => $shop_id, 'item_code' => $item['ItemCode']], [
+                                            'shop_id' => $shop_id,
+                                            'item_code' => $item['ItemCode'],
+                                        ]);
+                                    }
+                                }
+                                else{
+                                    $item = (array)$result;
                                     ShopProduct::updateOrCreate(['shop_id' => $shop_id, 'item_code' => $item['ItemCode']], [
                                         'shop_id' => $shop_id,
                                         'item_code' => $item['ItemCode'],
                                     ]);
                                 }
                             }
+                            if($total < $start +100){
+                                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $shop_id)->update(['get_status' => 2, 'total' => $total, 'start' => $start + 100]);
+                            }
                             else{
-                                $item = (array)$result;
-                                ShopProduct::updateOrCreate(['shop_id' => $shop_id, 'item_code' => $item['ItemCode']], [
-                                    'shop_id' => $shop_id,
-                                    'item_code' => $item['ItemCode'],
-                                ]);
+                                ShopCategory::where('pagekey', $pagekey)->where('shop_id', $shop_id)->update(['get_status' => 1, 'total' => $total, 'start' => $start + 100]);
                             }
                         }
-                        if($total < $start +100){
-                            ShopCategory::where('pagekey', $pagekey)->where('shop_id', $shop_id)->update(['get_status' => 2, 'total' => $total, 'start' => $start + 100]);
-                        }
-                        else{
-                            ShopCategory::where('pagekey', $pagekey)->where('shop_id', $shop_id)->update(['get_status' => 1, 'total' => $total, 'start' => $start + 100]);
-                        }
+
                     }
                     catch (ErrorException $e){
                         Log::error('Get Product Error' . $e);
@@ -114,7 +116,6 @@ class GetProduct extends Command
                 }
             }
         }
-
         return 0;
     }
 }
